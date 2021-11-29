@@ -26,9 +26,9 @@
 /******************************************************************************/
 
 import { queueTask, dropTask } from './tasks.js';
+import BidiTrieContainer from './biditrie.js';
 import HNTrieContainer from './hntrie.js';
 import { sparseBase64 } from './base64-custom.js';
-import { BidiTrieContainer } from './biditrie.js';
 import { StaticFilteringParser } from './static-filtering-parser.js';
 import { CompiledListReader } from './static-filtering-io.js';
 
@@ -379,7 +379,19 @@ const filterUnitBufferResize = function(newSize) {
         filterUnits[i] = null;
     }
 };
-
+/*
+const refUnits = JSON.parse(`[${'null,'.repeat(65535)}null]`);
+let refUnitWritePtr = 0;
+const refUnitAdd = function(f) {
+    const i = filterUnitWritePtr;
+    filterUnitWritePtr += 1;
+    if ( filterUnitWritePtr > filterUnits.length ) {
+        filterUnitBufferResize(filterUnitWritePtr);
+    }
+    filterUnits[i] = f;
+    return i;
+};
+*/
 // Initial size should be enough for default set of filter lists.
 const filterSequences = JSON.parse(`[${'0,'.repeat(163839)}0]`);
 let filterSequenceWritePtr = 3;
@@ -407,6 +419,11 @@ const filterSequenceBufferResize = function(newSize) {
         filterSequences[i] = 0;
     }
 };
+
+/******************************************************************************/
+
+const origHNTrieContainer = new HNTrieContainer();
+const destHNTrieContainer = new HNTrieContainer();
 
 /******************************************************************************/
 
@@ -1364,107 +1381,88 @@ const domainOptIterator = new DomainOptIterator('');
 // The optimal "class" is picked according to the content of the
 // `domain=` filter option.
 
-const filterOrigin = (( ) => {
-    const FilterOrigin = class {
-        constructor() {
-            this.trieContainer = new HNTrieContainer();
-        }
+const FilterOrigin = class {
+    constructor() {
+    }
 
-        compile(domainOptList, prepend, units) {
-            const hostnameHits = [];
-            const hostnameMisses = [];
-            const entityHits = [];
-            const entityMisses = [];
-            for ( const s of domainOptList ) {
-                const len = s.length;
-                const beg = len > 1 && s.charCodeAt(0) === 0x7E ? 1 : 0;
-                const end = len > 2 &&
-                            s.charCodeAt(len - 1) === 0x2A /* '*' */ &&
-                            s.charCodeAt(len - 2) === 0x2E /* '.' */
-                    ? len - 2 : len;
-                if ( end <= beg ) {  continue; }
-                if ( end === len ) {
-                    if ( beg === 0 ) {
-                        hostnameHits.push(s);
-                    } else {
-                        hostnameMisses.push(s.slice(1));
-                    }
+    compile(domainOptList, prepend, units) {
+        const hostnameHits = [];
+        const hostnameMisses = [];
+        const entityHits = [];
+        const entityMisses = [];
+        for ( const s of domainOptList ) {
+            const len = s.length;
+            const beg = len > 1 && s.charCodeAt(0) === 0x7E ? 1 : 0;
+            const end = len > 2 &&
+                        s.charCodeAt(len - 1) === 0x2A /* '*' */ &&
+                        s.charCodeAt(len - 2) === 0x2E /* '.' */
+                ? len - 2 : len;
+            if ( end <= beg ) {  continue; }
+            if ( end === len ) {
+                if ( beg === 0 ) {
+                    hostnameHits.push(s);
                 } else {
-                    if ( beg === 0 ) {
-                        entityHits.push(s.slice(0, -2));
-                    } else {
-                        entityMisses.push(s.slice(1, -2));
-                    }
-                }
-            }
-            const compiledHit = [];
-            if ( entityHits.length !== 0 ) {
-                for ( const entity of entityHits ) {
-                    compiledHit.push(FilterOriginEntityHit.compile(entity));
-                }
-            }
-            if ( hostnameHits.length === 1 ) {
-                compiledHit.push(FilterOriginHit.compile(hostnameHits[0]));
-            } else if ( hostnameHits.length > 1 ) {
-                compiledHit.push(FilterOriginHitSet.compile(hostnameHits.join('|')));
-            }
-            if ( compiledHit.length > 1 ) {
-                compiledHit[0] = FilterOriginHitAny.compile(compiledHit.slice());
-                compiledHit.length = 1;
-            }
-            const compiledMiss = [];
-            if ( entityMisses.length !== 0 ) {
-                for ( const entity of entityMisses ) {
-                    compiledMiss.push(FilterOriginEntityMiss.compile(entity));
-                }
-            }
-            if ( hostnameMisses.length === 1 ) {
-                compiledMiss.push(FilterOriginMiss.compile(hostnameMisses[0]));
-            } else if ( hostnameMisses.length > 1 ) {
-                compiledMiss.push(FilterOriginMissSet.compile(hostnameMisses.join('|')));
-            }
-            if ( prepend ) {
-                if ( compiledHit.length !== 0 ) {
-                    units.unshift(compiledHit[0]);
-                }
-                if ( compiledMiss.length !== 0 ) {
-                    units.unshift(...compiledMiss);
+                    hostnameMisses.push(s.slice(1));
                 }
             } else {
-                if ( compiledMiss.length !== 0 ) {
-                    units.push(...compiledMiss);
-                }
-                if ( compiledHit.length !== 0 ) {
-                    units.push(compiledHit[0]);
+                if ( beg === 0 ) {
+                    entityHits.push(s.slice(0, -2));
+                } else {
+                    entityMisses.push(s.slice(1, -2));
                 }
             }
         }
-
-        prime() {
-            this.trieContainer.reset(
-                keyvalStore.getItem('SNFE.filterOrigin.trieDetails')
-            );
+        const compiledHit = [];
+        if ( entityHits.length !== 0 ) {
+            for ( const entity of entityHits ) {
+                compiledHit.push(FilterOriginEntityHit.compile(entity));
+            }
         }
-
-        reset() {
-            this.trieContainer.reset();
+        if ( hostnameHits.length === 1 ) {
+            compiledHit.push(FilterOriginHit.compile(hostnameHits[0]));
+        } else if ( hostnameHits.length > 1 ) {
+            compiledHit.push(FilterOriginHitSet.compile(hostnameHits.join('|')));
         }
-
-        optimize() {
-            keyvalStore.setItem(
-                'SNFE.filterOrigin.trieDetails',
-                this.trieContainer.optimize()
-            );
+        if ( compiledHit.length > 1 ) {
+            compiledHit[0] = FilterOriginHitAny.compile(compiledHit.slice());
+            compiledHit.length = 1;
         }
-
-        toSelfie() {
+        const compiledMiss = [];
+        if ( entityMisses.length !== 0 ) {
+            for ( const entity of entityMisses ) {
+                compiledMiss.push(FilterOriginEntityMiss.compile(entity));
+            }
         }
-
-        fromSelfie() {
+        if ( hostnameMisses.length === 1 ) {
+            compiledMiss.push(FilterOriginMiss.compile(hostnameMisses[0]));
+        } else if ( hostnameMisses.length > 1 ) {
+            compiledMiss.push(FilterOriginMissSet.compile(hostnameMisses.join('|')));
         }
-    };
-    return new FilterOrigin();
-})();
+        if ( prepend ) {
+            if ( compiledHit.length !== 0 ) {
+                units.unshift(compiledHit[0]);
+            }
+            if ( compiledMiss.length !== 0 ) {
+                units.unshift(...compiledMiss);
+            }
+        } else {
+            if ( compiledMiss.length !== 0 ) {
+                units.push(...compiledMiss);
+            }
+            if ( compiledHit.length !== 0 ) {
+                units.push(compiledHit[0]);
+            }
+        }
+    }
+
+    toSelfie() {
+    }
+
+    fromSelfie() {
+    }
+};
+
+const filterOrigin = new FilterOrigin();
 
 /******************************************************************************/
 
@@ -1475,11 +1473,11 @@ const FilterOriginHit = class {
     }
 
     get domainOpt() {
-        return filterOrigin.trieContainer.extractHostname(this.i, this.n);
+        return origHNTrieContainer.extractHostname(this.i, this.n);
     }
 
     match() {
-        return filterOrigin.trieContainer.matchesHostname(
+        return origHNTrieContainer.matchesHostname(
             $docHostname,
             this.i,
             this.n
@@ -1500,7 +1498,7 @@ const FilterOriginHit = class {
 
     static fromCompiled(args) {
         return new FilterOriginHit(
-            filterOrigin.trieContainer.storeHostname(args[1]),
+            origHNTrieContainer.storeHostname(args[1]),
             args[1].length
         );
     }
@@ -1531,7 +1529,7 @@ const FilterOriginMiss = class extends FilterOriginHit {
 
     static fromCompiled(args) {
         return new FilterOriginMiss(
-            filterOrigin.trieContainer.storeHostname(args[1]),
+            origHNTrieContainer.storeHostname(args[1]),
             args[1].length
         );
     }
@@ -1548,20 +1546,25 @@ registerFilterClass(FilterOriginMiss);
 /******************************************************************************/
 
 const FilterOriginHitSet = class {
-    constructor(domainOpt, oneOf = null) {
+    constructor(domainOpt, oneOf = 0) {
         this.domainOpt = domainOpt;
-        this.oneOf = oneOf !== null
-            ? filterOrigin.trieContainer.createOne(oneOf)
-            : null;
+        this.oneOf = oneOf;
+        this.$lastHostname = '';
+        this.$lastResult = -1;
     }
 
     match() {
-        if ( this.oneOf === null ) {
-            this.oneOf = filterOrigin.trieContainer.fromIterable(
+        if ( this.oneOf === 0 ) {
+            this.oneOf = origHNTrieContainer.createTrie(
                 domainOptIterator.reset(this.domainOpt)
             );
         }
-        return this.oneOf.matches($docHostname) !== -1;
+        if ( $docHostname !== this.$lastHostname ) {
+            this.$lastResult = origHNTrieContainer
+                .setNeedle(this.$lastHostname = $docHostname)
+                .matches(this.oneOf);
+        }
+        return this.$lastResult !== -1;
     }
 
     logData(details) {
@@ -1569,13 +1572,7 @@ const FilterOriginHitSet = class {
     }
 
     toSelfie() {
-        return [
-            this.fid,
-            this.domainOpt,
-            this.oneOf !== null
-                ? filterOrigin.trieContainer.compileOne(this.oneOf)
-                : null
-        ];
+        return [ this.fid, this.domainOpt, this.oneOf ];
     }
 
     static compile(domainOpt) {
@@ -1712,34 +1709,27 @@ registerFilterClass(FilterOriginEntityMiss);
 /******************************************************************************/
 
 const FilterOriginHitSetTest = class extends FilterOriginHitSet {
-    constructor(domainOpt, hasEntity = undefined, oneOf = null) {
+    constructor(domainOpt, hasEntity = undefined, oneOf = 0) {
         super(domainOpt, oneOf);
-        this.hasEntity = hasEntity === undefined
-            ? domainOpt.indexOf('.*') !== -1
-            : hasEntity;
+        this.hasEntity = hasEntity !== undefined
+            ? hasEntity
+            : domainOpt.includes('.*');
     }
 
     match() {
-        if ( this.oneOf === null ) {
-            this.oneOf = filterOrigin.trieContainer.fromIterable(
+        if ( this.oneOf === 0 ) {
+            this.oneOf = origHNTrieContainer.createTrie(
                 domainOptIterator.reset(this.domainOpt)
             );
             this.domainOpt = '';
         }
-        return this.oneOf.matches($docHostname) !== -1 ||
+        return origHNTrieContainer.setNeedle($docHostname).matches(this.oneOf) !== -1 ||
                this.hasEntity !== false &&
-               this.oneOf.matches(`${$docEntity.compute()}.*`) !== -1;
+               origHNTrieContainer.setNeedle(`${$docEntity.compute()}.*`).matches(this.oneOf) !== -1;
     }
 
     toSelfie() {
-        return [
-            this.fid,
-            this.domainOpt,
-            this.hasEntity,
-            this.oneOf !== null
-                ? filterOrigin.trieContainer.compileOne(this.oneOf)
-                : null
-        ];
+        return [ this.fid, this.domainOpt, this.hasEntity, this.oneOf ];
     }
 
     static fromSelfie(args) {
@@ -2042,53 +2032,39 @@ registerFilterClass(FilterCompositeAll);
 // Dictionary of hostnames
 
 const FilterHostnameDict = class {
-    constructor(args) {
-        this.$h = ''; // short-lived register
-        this.dict = FilterHostnameDict.trieContainer.createOne(args);
+    constructor(dict = 0) {
+        this.dict = dict !== 0
+            ? dict
+            : destHNTrieContainer.createTrie();
+        this.$lastHostname = '';
+        this.$lastResult = -1;
     }
 
     get size() {
-        return this.dict.size;
+        return Array.from(destHNTrieContainer.iterateTrie(this.dict)).length;
     }
 
     add(hn) {
-        return this.dict.add(hn);
+        return destHNTrieContainer.setNeedle(hn).add(this.dict) > 0;
     }
 
     match() {
-        const pos = this.dict.matches($requestHostname);
-        if ( pos === -1 ) { return false; }
-        this.$h = $requestHostname.slice(pos);
-        return true;
+        if ( $requestHostname !== this.$lastHostname ) {
+            this.$lastResult = destHNTrieContainer
+                .setNeedle(this.$lastHostname = $requestHostname)
+                .matches(this.dict);
+        }
+        return this.$lastResult !== -1;
     }
 
     logData(details) {
-        details.pattern.push('||', this.$h, '^');
-        details.regex.push(restrFromPlainPattern(this.$h), '\\.?', restrSeparator);
+        const hostname = this.$lastHostname.slice(this.$lastResult);
+        details.pattern.push('||', hostname, '^');
+        details.regex.push(restrFromPlainPattern(hostname), '\\.?', restrSeparator);
     }
 
     toSelfie() {
-        return [
-            this.fid,
-            FilterHostnameDict.trieContainer.compileOne(this.dict)
-        ];
-    }
-
-    static prime() {
-        return FilterHostnameDict.trieContainer.reset(
-            keyvalStore.getItem('SNFE.FilterHostnameDict.trieDetails')
-        );
-    }
-
-    static reset() {
-        return FilterHostnameDict.trieContainer.reset();
-    }
-
-    static optimize() {
-        keyvalStore.setItem(
-            'SNFE.FilterHostnameDict.trieDetails',
-            FilterHostnameDict.trieContainer.optimize()
-        );
+        return [ this.fid, this.dict ];
     }
 
     static fromSelfie(args) {
@@ -2096,20 +2072,22 @@ const FilterHostnameDict = class {
     }
 };
 
-FilterHostnameDict.trieContainer = new HNTrieContainer();
-
 registerFilterClass(FilterHostnameDict);
 
 /******************************************************************************/
 
 const FilterDenyAllow = class {
-    constructor(s, trieArgs) {
+    constructor(s, dict = 0) {
         this.s = s;
-        this.hndict = FilterHostnameDict.trieContainer.createOne(trieArgs);
+        this.hndict = dict !== 0
+            ? dict
+            : destHNTrieContainer.createTrie();
     }
 
     match() {
-        return this.hndict.matches($requestHostname) === -1;
+        return destHNTrieContainer
+           .setNeedle($requestHostname)
+           .matches(this.hndict) === -1;
     }
 
     logData(details) {
@@ -2117,11 +2095,7 @@ const FilterDenyAllow = class {
     }
 
     toSelfie() {
-        return [
-            this.fid,
-            this.s,
-            FilterHostnameDict.trieContainer.compileOne(this.hndict),
-        ];
+        return [ this.fid, this.s, this.hndict ];
     }
 
     static compile(details) {
@@ -2132,7 +2106,7 @@ const FilterDenyAllow = class {
         const f = new FilterDenyAllow(args[1]);
         for ( const hn of domainOptIterator.reset(args[1]) ) {
             if ( hn === '' ) { continue; }
-            f.hndict.add(hn);
+            destHNTrieContainer.setNeedle(hn).add(f.hndict);
         }
         return f;
     }
@@ -2154,21 +2128,23 @@ registerFilterClass(FilterDenyAllow);
 // the document origin.
 
 const FilterJustOrigin = class {
-    constructor(args) {
+    constructor(dict = 0) {
+        this.dict = dict !== 0
+            ? dict
+            : origHNTrieContainer.createTrie();
         this.$h = ''; // short-lived register
-        this.dict = filterOrigin.trieContainer.createOne(args);
     }
 
     get size() {
-        return this.dict.size;
+        return Array.from(origHNTrieContainer.iterateTrie(this.dict)).length;
     }
 
     add(hn) {
-        return this.dict.add(hn);
+        return origHNTrieContainer.setNeedle(hn).add(this.dict);
     }
 
     match() {
-        const pos = this.dict.matches($docHostname);
+        const pos = origHNTrieContainer.setNeedle($docHostname).matches(this.dict);
         if ( pos === -1 ) { return false; }
         this.$h = $docHostname.slice(pos);
         return true;
@@ -2181,7 +2157,7 @@ const FilterJustOrigin = class {
     }
 
     toSelfie() {
-        return [ this.fid, filterOrigin.trieContainer.compileOne(this.dict) ];
+        return [ this.fid, this.dict ];
     }
 
     static fromCompiled(args) {
@@ -2246,16 +2222,16 @@ registerFilterClass(FilterHTTPJustOrigin);
 /******************************************************************************/
 
 const FilterPlainTrie = class {
-    constructor(trie) {
-        this.plainTrie = trie !== undefined
+    constructor(trie = 0) {
+        this.trie = trie !== 0
             ? trie
-            : bidiTrie.createOne();
+            : bidiTrie.createTrie();
         this.$matchedUnit = 0;
     }
 
     match() {
-        if ( this.plainTrie.matches($tokenBeg) !== 0 ) {
-            this.$matchedUnit = this.plainTrie.$iu;
+        if ( bidiTrie.matches(this.trie, $tokenBeg) !== 0 ) {
+            this.$matchedUnit = bidiTrie.$iu;
             return true;
         }
         return false;
@@ -2266,7 +2242,7 @@ const FilterPlainTrie = class {
     }
 
     logData(details) {
-        const s = $requestURL.slice(this.plainTrie.$l, this.plainTrie.$r);
+        const s = $requestURL.slice(bidiTrie.$l, bidiTrie.$r);
         details.pattern.push(s);
         details.regex.push(restrFromPlainPattern(s));
         if ( this.$matchedUnit !== -1 ) {
@@ -2277,14 +2253,15 @@ const FilterPlainTrie = class {
     addUnitToTrie(iunit) {
         const f = filterUnits[iunit];
         const trieDetails = f.toBidiTrie();
-        const id = this.plainTrie.add(
+        const id = bidiTrie.add(
+            this.trie,
             trieDetails.i,
             trieDetails.n,
             trieDetails.itok
         );
         // No point storing a pattern with conditions if the bidi-trie already
         // contain a pattern with no conditions.
-        const ix = this.plainTrie.getExtra(id);
+        const ix = bidiTrie.getExtra(id);
         if ( ix === 1 ) {
             filterUnits[iunit] = null;
             return;
@@ -2293,7 +2270,7 @@ const FilterPlainTrie = class {
         // ones since they will always be short-circuited by the condition-less
         // pattern.
         if ( f instanceof FilterPatternPlain ) {
-            this.plainTrie.setExtra(id, 1);
+            bidiTrie.setExtra(id, 1);
             filterUnits[iunit] = null;
             return;
         }
@@ -2302,15 +2279,15 @@ const FilterPlainTrie = class {
             filterUnits[iunit] = null;
             iunit = filterSequences[f.i];
         }
-        this.plainTrie.setExtra(id, filterSequenceAdd(iunit, ix));
+        bidiTrie.setExtra(id, filterSequenceAdd(iunit, ix));
     }
 
     toSelfie() {
-        return [ this.fid, bidiTrie.compileOne(this.plainTrie) ];
+        return [ this.fid, this.trie ];
     }
 
     static fromSelfie(args) {
-        return new FilterPlainTrie(bidiTrie.createOne(args[1]));
+        return new FilterPlainTrie(args[1]);
     }
 };
 
@@ -3629,8 +3606,12 @@ const FilterContainer = function() {
 /******************************************************************************/
 
 FilterContainer.prototype.prime = function() {
-    FilterHostnameDict.prime();
-    filterOrigin.prime();
+    origHNTrieContainer.reset(
+        keyvalStore.getItem('SNFE.filterOrigin.trieDetails')
+    );
+    destHNTrieContainer.reset(
+        keyvalStore.getItem('SNFE.FilterHostnameDict.trieDetails')
+    );
     bidiTriePrime();
 };
 
@@ -3650,8 +3631,8 @@ FilterContainer.prototype.reset = function() {
     urlTokenizer.resetKnownTokens();
 
     // This will invalidate all tries
-    FilterHostnameDict.reset();
-    filterOrigin.reset();
+    origHNTrieContainer.reset();
+    destHNTrieContainer.reset();
     bidiTrie.reset();
     filterArgsToUnit.clear();
 
@@ -3791,7 +3772,10 @@ FilterContainer.prototype.optimize = function() {
             }
         }
     }
-    FilterHostnameDict.optimize();
+    keyvalStore.setItem(
+        'SNFE.FilterHostnameDict.trieDetails',
+        destHNTrieContainer.optimize()
+    );
     bidiTrieOptimize();
     // Be sure unused filters can be garbage collected.
     filterUnits.fill(null, filterUnitWritePtr);
@@ -3818,16 +3802,19 @@ FilterContainer.prototype.toSelfie = function(storage, path) {
     };
 
     bidiTrieOptimize(true);
-    filterOrigin.optimize();
+    keyvalStore.setItem(
+        'SNFE.filterOrigin.trieDetails',
+        origHNTrieContainer.optimize()
+    );
 
     return Promise.all([
         storage.put(
             `${path}/FilterHostnameDict.trieContainer`,
-            FilterHostnameDict.trieContainer.serialize(sparseBase64)
+            destHNTrieContainer.serialize(sparseBase64)
         ),
         storage.put(
             `${path}/FilterOrigin.trieContainer`,
-            filterOrigin.trieContainer.serialize(sparseBase64)
+            origHNTrieContainer.serialize(sparseBase64)
         ),
         storage.put(
             `${path}/bidiTrie`,
@@ -3872,22 +3859,13 @@ FilterContainer.prototype.fromSelfie = function(storage, path) {
 
     return Promise.all([
         storage.get(`${path}/FilterHostnameDict.trieContainer`).then(details =>
-            FilterHostnameDict.trieContainer.unserialize(
-                details.content,
-                sparseBase64
-            )
+            destHNTrieContainer.unserialize(details.content, sparseBase64)
         ),
         storage.get(`${path}/FilterOrigin.trieContainer`).then(details =>
-            filterOrigin.trieContainer.unserialize(
-                details.content,
-                sparseBase64
-            )
+            origHNTrieContainer.unserialize(details.content, sparseBase64)
         ),
         storage.get(`${path}/bidiTrie`).then(details =>
-            bidiTrie.unserialize(
-                details.content,
-                sparseBase64
-            )
+            bidiTrie.unserialize(details.content, sparseBase64)
         ),
         storage.get(`${path}/filterSequences`).then(details => {
             const size = sparseBase64.decodeSize(details.content) >> 2;
@@ -4560,8 +4538,8 @@ FilterContainer.prototype.getFilterCount = function() {
 FilterContainer.prototype.enableWASM = function(wasmModuleFetcher, path) {
     return Promise.all([
         bidiTrie.enableWASM(wasmModuleFetcher, path),
-        filterOrigin.trieContainer.enableWASM(wasmModuleFetcher, path),
-        FilterHostnameDict.trieContainer.enableWASM(wasmModuleFetcher, path),
+        origHNTrieContainer.enableWASM(wasmModuleFetcher, path),
+        destHNTrieContainer.enableWASM(wasmModuleFetcher, path),
     ]).then(results => {
         return results.every(a => a === true);
     });
@@ -4707,8 +4685,9 @@ FilterContainer.prototype.filterClassHistogram = function() {
                 countFilter(filterUnits[filterSequences[i+0]]);
                 i = filterSequences[i+1];
             }
-            if ( f.plainTrie ) {
-                filterClassDetails.get(1000).count += f.plainTrie.size;
+            if ( f instanceof FilterPlainTrie && f.trie !== 0 ) {
+                filterClassDetails.get(1000).count +=
+                    Array.from(bidiTrie.iterateTrie(f.trie)).length;
             }
             continue;
         }
@@ -4724,8 +4703,9 @@ FilterContainer.prototype.filterClassHistogram = function() {
             }
             continue;
         }
-        if ( f instanceof FilterPlainTrie ) {
-            filterClassDetails.get(1000).count += f.plainTrie.size;
+        if ( f instanceof FilterPlainTrie && f.trie !== 0 ) {
+            filterClassDetails.get(1000).count +=
+                Array.from(bidiTrie.iterateTrie(f.trie)).length;
             continue;
         }
     }
