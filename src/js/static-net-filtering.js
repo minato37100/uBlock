@@ -2032,27 +2032,27 @@ registerFilterClass(FilterCompositeAll);
 // Dictionary of hostnames
 
 const FilterHostnameDict = class {
-    constructor(dict = 0) {
-        this.dict = dict !== 0
-            ? dict
+    constructor(itrie = 0) {
+        this.itrie = itrie !== 0
+            ? itrie
             : destHNTrieContainer.createTrie();
         this.$lastHostname = '';
         this.$lastResult = -1;
     }
 
     get size() {
-        return Array.from(destHNTrieContainer.iterateTrie(this.dict)).length;
+        return Array.from(destHNTrieContainer.iterateTrie(this.itrie)).length;
     }
 
     add(hn) {
-        return destHNTrieContainer.setNeedle(hn).add(this.dict) > 0;
+        return destHNTrieContainer.setNeedle(hn).add(this.itrie) > 0;
     }
 
     match() {
         if ( $requestHostname !== this.$lastHostname ) {
             this.$lastResult = destHNTrieContainer
                 .setNeedle(this.$lastHostname = $requestHostname)
-                .matches(this.dict);
+                .matches(this.itrie);
         }
         return this.$lastResult !== -1;
     }
@@ -2064,7 +2064,7 @@ const FilterHostnameDict = class {
     }
 
     toSelfie() {
-        return [ this.fid, this.dict ];
+        return [ this.fid, this.itrie ];
     }
 
     static fromSelfie(args) {
@@ -2077,17 +2077,17 @@ registerFilterClass(FilterHostnameDict);
 /******************************************************************************/
 
 const FilterDenyAllow = class {
-    constructor(s, dict = 0) {
+    constructor(s, itrie = 0) {
         this.s = s;
-        this.hndict = dict !== 0
-            ? dict
+        this.itrie = itrie !== 0
+            ? itrie
             : destHNTrieContainer.createTrie();
     }
 
     match() {
         return destHNTrieContainer
            .setNeedle($requestHostname)
-           .matches(this.hndict) === -1;
+           .matches(this.itrie) === -1;
     }
 
     logData(details) {
@@ -2095,7 +2095,7 @@ const FilterDenyAllow = class {
     }
 
     toSelfie() {
-        return [ this.fid, this.s, this.hndict ];
+        return [ this.fid, this.s, this.itrie ];
     }
 
     static compile(details) {
@@ -2106,7 +2106,7 @@ const FilterDenyAllow = class {
         const f = new FilterDenyAllow(args[1]);
         for ( const hn of domainOptIterator.reset(args[1]) ) {
             if ( hn === '' ) { continue; }
-            destHNTrieContainer.setNeedle(hn).add(f.hndict);
+            destHNTrieContainer.setNeedle(hn).add(f.itrie);
         }
         return f;
     }
@@ -2128,23 +2128,23 @@ registerFilterClass(FilterDenyAllow);
 // the document origin.
 
 const FilterJustOrigin = class {
-    constructor(dict = 0) {
-        this.dict = dict !== 0
-            ? dict
+    constructor(itrie = 0) {
+        this.itrie = itrie !== 0
+            ? itrie
             : origHNTrieContainer.createTrie();
         this.$h = ''; // short-lived register
     }
 
     get size() {
-        return Array.from(origHNTrieContainer.iterateTrie(this.dict)).length;
+        return Array.from(origHNTrieContainer.iterateTrie(this.itrie)).length;
     }
 
     add(hn) {
-        return origHNTrieContainer.setNeedle(hn).add(this.dict);
+        return origHNTrieContainer.setNeedle(hn).add(this.itrie);
     }
 
     match() {
-        const pos = origHNTrieContainer.setNeedle($docHostname).matches(this.dict);
+        const pos = origHNTrieContainer.setNeedle($docHostname).matches(this.itrie);
         if ( pos === -1 ) { return false; }
         this.$h = $docHostname.slice(pos);
         return true;
@@ -2157,7 +2157,7 @@ const FilterJustOrigin = class {
     }
 
     toSelfie() {
-        return [ this.fid, this.dict ];
+        return [ this.fid, this.itrie ];
     }
 
     static fromCompiled(args) {
@@ -2222,15 +2222,15 @@ registerFilterClass(FilterHTTPJustOrigin);
 /******************************************************************************/
 
 const FilterPlainTrie = class {
-    constructor(trie = 0) {
-        this.trie = trie !== 0
-            ? trie
+    constructor(itrie = 0) {
+        this.itrie = itrie !== 0
+            ? itrie
             : bidiTrie.createTrie();
         this.$matchedUnit = 0;
     }
 
     match() {
-        if ( bidiTrie.matches(this.trie, $tokenBeg) !== 0 ) {
+        if ( bidiTrie.matches(this.itrie, $tokenBeg) !== 0 ) {
             this.$matchedUnit = bidiTrie.$iu;
             return true;
         }
@@ -2254,7 +2254,7 @@ const FilterPlainTrie = class {
         const f = filterUnits[iunit];
         const trieDetails = f.toBidiTrie();
         const id = bidiTrie.add(
-            this.trie,
+            this.itrie,
             trieDetails.i,
             trieDetails.n,
             trieDetails.itok
@@ -2283,7 +2283,7 @@ const FilterPlainTrie = class {
     }
 
     toSelfie() {
-        return [ this.fid, this.trie ];
+        return [ this.fid, this.itrie ];
     }
 
     static fromSelfie(args) {
@@ -4685,9 +4685,9 @@ FilterContainer.prototype.filterClassHistogram = function() {
                 countFilter(filterUnits[filterSequences[i+0]]);
                 i = filterSequences[i+1];
             }
-            if ( f instanceof FilterPlainTrie && f.trie !== 0 ) {
+            if ( f instanceof FilterPlainTrie && f.itrie !== 0 ) {
                 filterClassDetails.get(1000).count +=
-                    Array.from(bidiTrie.iterateTrie(f.trie)).length;
+                    Array.from(bidiTrie.iterateTrie(f.itrie)).length;
             }
             continue;
         }
@@ -4703,9 +4703,9 @@ FilterContainer.prototype.filterClassHistogram = function() {
             }
             continue;
         }
-        if ( f instanceof FilterPlainTrie && f.trie !== 0 ) {
+        if ( f instanceof FilterPlainTrie && f.itrie !== 0 ) {
             filterClassDetails.get(1000).count +=
-                Array.from(bidiTrie.iterateTrie(f.trie)).length;
+                Array.from(bidiTrie.iterateTrie(f.itrie)).length;
             continue;
         }
     }
