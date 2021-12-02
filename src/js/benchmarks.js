@@ -171,12 +171,13 @@ const loadBenchmarkDataset = (( ) => {
         else if ( r === 2 ) { allowCount += 1; }
         if ( r !== 1 ) {
             if ( staticNetFilteringEngine.hasQuery(fctxt) ) {
-                staticNetFilteringEngine.filterQuery(fctxt, 'queryprune');
+                staticNetFilteringEngine.filterQuery(fctxt, 'removeparam');
             }
             if ( fctxt.type === 'main_frame' || fctxt.type === 'sub_frame' ) {
                 staticNetFilteringEngine.matchAndFetchModifiers(fctxt, 'csp');
             }
-            staticNetFilteringEngine.matchHeaders(fctxt, []);
+            // Filtering on http headers is not enabled by default
+            // staticNetFilteringEngine.matchHeaders(fctxt, []);
         } else if ( redirectEngine !== undefined ) {
             staticNetFilteringEngine.redirectRequest(redirectEngine, fctxt);
         }
