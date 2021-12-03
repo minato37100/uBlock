@@ -435,7 +435,9 @@ function filterRefsToSelfie() {
         const out = Object.create(null);
         for ( const prop of Object.keys(v) ) {
             const value = v[prop];
-            out[prop] = prop.startsWith('$') ? null : value;
+            out[prop] = prop.startsWith('$')
+                ? (typeof value === 'string' ? '' : null)
+                : value;
         }
         refs.push({ t: 3, v: out });
     }
@@ -1312,7 +1314,7 @@ registerFilterClass(FilterNotType);
 
 // A helper class to parse `domain=` option.
 
-const DomainOptIterator = class {
+class DomainOptIterator {
     constructor(domainOpt) {
         this.reset(domainOpt);
     }
@@ -1343,10 +1345,14 @@ const DomainOptIterator = class {
     [Symbol.iterator]() {
         return this;
     }
-};
+}
 
 // A helper instance to reuse throughout
 const domainOptIterator = new DomainOptIterator('');
+
+const domainOptNormalizer = domainOpt => {
+    return domainOpt.split('|').sort().join('|');
+};
 
 /******************************************************************************/
 
@@ -1493,8 +1499,16 @@ registerFilterClass(FilterOriginMiss);
 /******************************************************************************/
 
 const FilterOriginHitSet = class {
+    // The `domainOpt` value may be in either the allocated refs or the trie,
+    // never in both at the same time.
     static getDomainOpt(idata) {
-        return filterRefs[filterData[idata+3]].domainOpt;
+        const itrie = filterData[idata+1];
+        if ( itrie === 0 ) {
+            return filterRefs[filterData[idata+3]].domainOpt;
+        }
+        return domainOptNormalizer(
+            Array.from(origHNTrieContainer.trieIterator(itrie)).join('|')
+        );
     }
 
     static hasOriginHit() {
@@ -1504,13 +1518,9 @@ const FilterOriginHitSet = class {
     static match(idata) {
         const refs = filterRefs[filterData[idata+3]];
         if ( $docHostname !== refs.$last ) {
-            let oneOf = filterData[idata+1];
-            if ( oneOf === 0 ) {
-                oneOf = filterData[idata+1] = origHNTrieContainer.createTrie(
-                    domainOptIterator.reset(refs.domainOpt)
-                );
-            }
             refs.$last = $docHostname;
+            const oneOf = filterData[idata+1] || this.toTrie(idata);
+            // Warning: The trie must be created at this point
             filterData[idata+2] = origHNTrieContainer
                 .setNeedle($docHostname)
                 .matches(oneOf);
@@ -1521,29 +1531,41 @@ const FilterOriginHitSet = class {
     static create(domainOpt) {
         const idata = filterDataAllocLen(4);
         filterData[idata+0] = FilterOriginHitSet.fid;
-        filterData[idata+1] = 0;                            // oneOf
-        filterData[idata+2] = -1;                           // $lastResult
+        filterData[idata+1] = 0;            // oneOf
+        filterData[idata+2] = -1;           // $lastResult
         filterData[idata+3] = filterRefAdd({
             domainOpt,
-            $last: null,
+            $last: '',
         });
         return idata;
     }
 
     static compile(domainOpt) {
-        return [ FilterOriginHitSet.fid, domainOpt ];
+        return [
+            FilterOriginHitSet.fid,
+            domainOptNormalizer(domainOpt),
+        ];
     }
 
     static fromCompiled(args) {
         const idata = filterDataAllocLen(4);
-        filterData[idata+0] = args[0];                      // fid
-        filterData[idata+1] = 0;                            // oneOf
-        filterData[idata+2] = -1;                           // $lastResult
+        filterData[idata+0] = args[0];      // fid
+        filterData[idata+1] = 0;            // oneOf
+        filterData[idata+2] = -1;           // $lastResult
         filterData[idata+3] = filterRefAdd({
             domainOpt: args[1],
             $last: '',
         });
         return idata;
+    }
+
+    static toTrie(idata) {
+        const refs = filterRefs[filterData[idata+3]];
+        const oneOf = filterData[idata+1] = origHNTrieContainer.createTrie(
+            domainOptIterator.reset(refs.domainOpt)
+        );
+        refs.domainOpt = '';
+        return oneOf;
     }
 
     static getTrie(idata) {
@@ -1577,7 +1599,10 @@ const FilterOriginMissSet = class extends FilterOriginHitSet {
     }
 
     static compile(domainOpt) {
-        return [ FilterOriginMissSet.fid, domainOpt ];
+        return [
+            FilterOriginMissSet.fid,
+            domainOptNormalizer(domainOpt),
+        ];
     }
 
     static keyFromArgs(args) {
@@ -1964,35 +1989,47 @@ const FilterHostnameDict = class {
     }
 
     static match(idata) {
-        const iref = filterData[idata+3];
-        const $lastHostname = filterRefs[iref];
-        if ( $requestHostname !== $lastHostname ) {
+        const refs = filterRefs[filterData[idata+3]];
+        if ( $requestHostname !== refs.$last ) {
+            const itrie = filterData[idata+1] || this.optimize(idata);
             filterData[idata+2] = destHNTrieContainer
-                .setNeedle(filterRefs[iref] = $requestHostname)
-                .matches(filterData[idata+1]);
+                .setNeedle(refs.$last = $requestHostname)
+                .matches(itrie);
         }
         return filterData[idata+2] !== -1;
     }
 
     static add(idata, hn) {
-        return destHNTrieContainer.setNeedle(hn).add(filterData[idata+1]) > 0;
+        filterRefs[filterData[idata+3]].hostnames.push(hn);
+    }
+
+    static optimize(idata) {
+        const itrie = filterData[idata+1];
+        if ( itrie !== 0 ) { return itrie; }
+        const refs = filterRefs[filterData[idata+3]];
+        filterData[idata+1] = destHNTrieContainer.createTrie(refs.hostnames);
+        refs.hostnames = [];
+        return filterData[idata+1];
     }
 
     static create() {
         const idata = filterDataAllocLen(4);
-        filterData[idata+0] = FilterHostnameDict.fid;           // fid
-        filterData[idata+1] = destHNTrieContainer.createTrie(); // itrie
-        filterData[idata+2] = -1;                               // lastResult
-        filterData[idata+3] = filterRefAdd(null);               // lastHostname
+        filterData[idata+0] = FilterHostnameDict.fid;   // fid
+        filterData[idata+1] = 0;                        // itrie
+        filterData[idata+2] = -1;                       // lastResult
+        filterData[idata+3] = filterRefAdd({
+            hostnames: [],
+            $last: '',
+        });
         return idata;
     }
 
     static logData(idata, details) {
-        const $lastHostname = filterRefs[filterData[idata+3]]
-            .slice(filterData[idata+2]);
-        details.pattern.push('||', $lastHostname, '^');
+        const refs = filterRefs[filterData[idata+3]];
+        const hostname = refs.$last.slice(filterData[idata+2]);
+        details.pattern.push('||', hostname, '^');
         details.regex.push(
-            restrFromPlainPattern($lastHostname),
+            restrFromPlainPattern(hostname),
             '\\.?',
             restrSeparator
         );
@@ -3499,9 +3536,11 @@ FilterContainer.prototype.prime = function() {
         keyvalStore.getItem('SNFE.destHNTrieContainer.trieDetails')
     );
     bidiTriePrime();
-    // Remove entries with obsolete name
+    // Remove entries with obsolete name.
+    // TODO: Remove before publishing 1.41.0
     keyvalStore.removeItem('SNFE.filterOrigin.trieDetails');
     keyvalStore.removeItem('SNFE.FilterHostnameDict.trieDetails');
+    keyvalStore.removeItem('SNFE.filterDocOrigin.trieDetails');
 };
 
 /******************************************************************************/
@@ -3628,14 +3667,14 @@ FilterContainer.prototype.freeze = function() {
     if ( this.optimizeTaskId === undefined ) {
         this.optimizeTaskId = queueTask(( ) => {
             this.optimizeTaskId = undefined;
-            this.optimize();
+            this.optimize(10);
         });
     }
 };
 
 /******************************************************************************/
 
-FilterContainer.prototype.optimize = function() {
+FilterContainer.prototype.optimize = function(throttle = 0) {
     if ( this.optimizeTaskId !== undefined ) {
         dropTask(this.optimizeTaskId);
         this.optimizeTaskId = undefined;
@@ -3643,19 +3682,36 @@ FilterContainer.prototype.optimize = function() {
 
     //this.filterClassHistogram();
 
-    const filterBucketId = FilterBucket.fid;
+    const later = throttle => {
+        this.optimizeTaskId = queueTask(( ) => {
+            this.optimizeTaskId = undefined;
+            this.optimize(throttle - 1);
+        });
+    };
+
+    const t0 = Date.now();
     for ( let bits = 0, n = this.categories.length; bits < n; bits++ ) {
         const bucket = this.categories[bits];
         if ( bucket === null ) { continue; }
         for ( const [ th, iunit ] of bucket ) {
-            if ( filterData[iunit+0] !== filterBucketId ) { continue; }
-            const optimizeBits =
-                (th === NO_TOKEN_HASH) || (bits & ModifyAction) !== 0
-                    ? 0b10
-                    : 0b01;
-            const inewunit = FilterBucket.optimize(iunit, optimizeBits);
-            if ( inewunit === undefined ) { continue; }
-            bucket.set(th, inewunit);
+            if ( throttle > 0 && (Date.now() - t0) > 48 ) {
+                return later(throttle);
+            }
+            const fc = filterGetClass(iunit);
+            if ( fc === FilterHostnameDict ) {
+                FilterHostnameDict.optimize(iunit);
+                continue;
+            }
+            if ( fc === FilterBucket ) {
+                const optimizeBits =
+                    (th === NO_TOKEN_HASH) || (bits & ModifyAction) !== 0
+                        ? 0b10
+                        : 0b01;
+                const inewunit = FilterBucket.optimize(iunit, optimizeBits);
+                if ( inewunit === undefined ) { continue; }
+                bucket.set(th, inewunit);
+                continue;
+            }
         }
     }
     // Here we do not optimize origHNTrieContainer because many origin-related
@@ -4428,40 +4484,7 @@ FilterContainer.prototype.test = async function(docURL, type, url) {
     }
 };
 
-/******************************************************************************-
-
-    With default filter lists:
-
-    As of 2019-04-18:
-
-        {bits: "0", token: "ad", size: 926, f: FilterBucket}
-        {bits: "0", token: "ads", size: 636, f: FilterBucket}
-        {bits: "41", token: "phncdn", size: 253, f: FilterBucket}
-        {bits: "0", token: "analytic", size: 174, f: FilterBucket}
-        {bits: "0", token: "tracking", size: 155, f: FilterBucket}
-        {bits: "48", token: "http", size: 146, f: FilterBucket}
-        {bits: "48", token: "https", size: 139, f: FilterBucket}
-        {bits: "58", token: "http", size: 122, f: FilterBucket}
-        {bits: "0", token: "adv", size: 121, f: FilterBucket}
-        {bits: "58", token: "https", size: 118, f: FilterBucket}
-        {bits: "0", token: "advertis", size: 102, f: FilterBucket}
-        {bits: "8", token: "doublecl", size: 96, f: FilterBucket}
-        {bits: "41", token: "imasdk", size: 90, f: FilterBucket}
-        {bits: "0", token: "cdn", size: 89, f: FilterBucket}
-        {bits: "0", token: "track", size: 87, f: FilterBucket}
-        {bits: "0", token: "stats", size: 82, f: FilterBucket}
-        {bits: "0", token: "banner", size: 74, f: FilterBucket}
-        {bits: "0", token: "log", size: 72, f: FilterBucket}
-        {bits: "0", token: "ga", size: 71, f: FilterBucket}
-        {bits: "0", token: "gif", size: 67, f: FilterBucket}
-        {bits: "0", token: "cloudfro", size: 64, f: FilterBucket}
-        {bits: "0", token: "amazonaw", size: 61, f: FilterBucket}
-        {bits: "41", token: "ajax", size: 58, f: FilterBucket}
-        {bits: "0", token: "tracker", size: 56, f: FilterBucket}
-        {bits: "40", token: "pagead2", size: 53, f: FilterBucket}
-        {bits: "0", token: "affiliat", size: 53, f: FilterBucket}
-
-*/
+/******************************************************************************/
 
 FilterContainer.prototype.bucketHistogram = function() {
     const results = [];
@@ -4481,43 +4504,7 @@ FilterContainer.prototype.bucketHistogram = function() {
     console.info(results);
 };
 
-/*******************************************************************************
-
-    With default filter lists:
-
-    As of 2020-05-15:
-
-        "FilterHostnameDict" Content => 60772}
-        "FilterPatternPlain" => 26432}
-        "FilterCompositeAll" => 17125}
-        "FilterPlainTrie Content" => 13519}
-        "FilterAnchorHnLeft" => 11931}
-        "FilterOriginHit" => 5524}
-        "FilterPatternRight" => 3376}
-        "FilterPatternRightEx" => 3130}
-        "FilterBucket" => 1961}
-        "FilterPlainTrie" => 1578}
-        "FilterOriginHitSet" => 1475}
-        "FilterAnchorHn" => 1453}
-        "FilterOriginMiss" => 730}
-        "FilterPatternGeneric" => 601}
-        "FilterModifier" => 404}
-        "FilterOriginMissSet" => 316}
-        "FilterTrailingSeparator" => 235}
-        "FilterAnchorRight" => 174}
-        "FilterPatternLeft" => 164}
-        "FilterRegex" => 125}
-        "FilterPatternLeftEx" => 68}
-        "FilterHostnameDict" => 62}
-        "FilterAnchorLeft" => 51}
-        "FilterJustOrigin" => 25}
-        "FilterTrue" => 18}
-        "FilterHTTPSJustOrigin" => 16}
-        "FilterHTTPJustOrigin" => 16}
-        "FilterType" => 0}
-        "FilterDenyAllow" => 0}
-
-*/
+/******************************************************************************/
 
 FilterContainer.prototype.filterClassHistogram = function() {
     const filterClassDetails = new Map();

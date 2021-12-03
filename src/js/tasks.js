@@ -30,7 +30,7 @@ export function queueTask(func) {
         return setTimeout(func, 1);
     }
 
-    return requestIdleCallback(func, { timeout: 5000 });
+    return requestIdleCallback(func, { timeout: 2000 });
 }
 
 export function dropTask(id) {
