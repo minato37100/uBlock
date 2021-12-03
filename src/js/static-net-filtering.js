@@ -53,7 +53,7 @@ import { FilteringContext } from './filtering-context.js';
 
 const keyvalStore = typeof vAPI !== 'undefined'
     ? vAPI.localStorage
-    : { getItem() { return null; }, setItem() {} };
+    : { getItem() { return null; }, setItem() {}, removeItem() {} };
 
 /******************************************************************************/
 
@@ -1037,9 +1037,6 @@ const FilterPatternGeneric = class {
     }
 };
 
-FilterPatternGeneric.prototype.re = null;
-FilterPatternGeneric.prototype.anchor = 0;
-
 FilterPatternGeneric.isSlow = true;
 
 registerFilterClass(FilterPatternGeneric);
@@ -1264,9 +1261,6 @@ const FilterRegex = class {
         }
     }
 };
-
-FilterRegex.prototype.re = null;
-FilterRegex.prototype.matchCase = false;
 
 FilterRegex.isSlow = true;
 
@@ -1963,6 +1957,12 @@ registerFilterClass(FilterCompositeAll);
 // Dictionary of hostnames
 
 const FilterHostnameDict = class {
+    static getCount(idata) {
+        return Array.from(
+            destHNTrieContainer.trieIterator(filterData[idata+1])
+        ).length;
+    }
+
     static match(idata) {
         const iref = filterData[idata+3];
         const $lastHostname = filterRefs[iref];
@@ -2044,6 +2044,12 @@ registerFilterClass(FilterDenyAllow);
 // the document origin.
 
 const FilterJustOrigin = class {
+    static getCount(idata) {
+        return Array.from(
+            origHNTrieContainer.trieIterator(filterData[idata+1])
+        ).length;
+    }
+
     static match(idata) {
         const pos = origHNTrieContainer.setNeedle($docHostname).matches(filterData[idata+1]);
         if ( pos === -1 ) { return false; }
@@ -2336,6 +2342,14 @@ registerFilterClass(FilterBucket);
 /******************************************************************************/
 
 const FilterBucketOfOriginHits = class extends FilterBucket {
+    static getCount(idata) {
+        return super.getCount(filterData[idata+2]);
+    }
+
+    static forEach(idata, fn) {
+        return super.forEach(filterData[idata+2], fn);
+    }
+
     static match(idata) {
         return filterMatch(filterData[idata+1]) &&
                filterMatch(filterData[idata+2]);
@@ -3463,20 +3477,15 @@ FilterCompiler.prototype.FILTER_UNSUPPORTED = 2;
 /******************************************************************************/
 
 const FilterContainer = function() {
-    this.compilerVersion = '1';
-    this.selfieVersion = '1';
+    this.compilerVersion = '2';
+    this.selfieVersion = '2';
 
     this.MAX_TOKEN_LENGTH = MAX_TOKEN_LENGTH;
     this.optimizeTaskId = undefined;
     // As long as CategoryCount is reasonably low, we will use an array to
     // store buckets using category bits as index. If ever CategoryCount
     // becomes too large, we can just go back to using a Map.
-    this.categories = (( ) => {
-        const out = [];
-        for ( let i = 0; i < CategoryCount; i++ ) { out[i] = undefined; }
-        return out;
-    })();
-
+    this.categories = JSON.parse(`[${'null,'.repeat(CategoryCount-1)}null]`);
     this.reset();
 };
 
@@ -3484,12 +3493,15 @@ const FilterContainer = function() {
 
 FilterContainer.prototype.prime = function() {
     origHNTrieContainer.reset(
-        keyvalStore.getItem('SNFE.filterOrigin.trieDetails')
+        keyvalStore.getItem('SNFE.origHNTrieContainer.trieDetails')
     );
     destHNTrieContainer.reset(
-        keyvalStore.getItem('SNFE.FilterHostnameDict.trieDetails')
+        keyvalStore.getItem('SNFE.destHNTrieContainer.trieDetails')
     );
     bidiTriePrime();
+    // Remove entries with obsolete name
+    keyvalStore.removeItem('SNFE.filterOrigin.trieDetails');
+    keyvalStore.removeItem('SNFE.FilterHostnameDict.trieDetails');
 };
 
 /******************************************************************************/
@@ -3503,11 +3515,10 @@ FilterContainer.prototype.reset = function() {
     this.discardedCount = 0;
     this.goodFilters = new Set();
     this.badFilters = new Set();
-    this.categories.fill(undefined);
+    this.categories.fill(null);
 
     urlTokenizer.resetKnownTokens();
 
-    // This will invalidate all tries
     filterDataReset();
     filterRefsReset();
     origHNTrieContainer.reset();
@@ -3547,7 +3558,7 @@ FilterContainer.prototype.freeze = function() {
         const fdata = args[2];
 
         let bucket = this.categories[bits];
-        if ( bucket === undefined ) {
+        if ( bucket === null ) {
             bucket = new Map();
             this.categories[bits] = bucket;
         }
@@ -3629,10 +3640,13 @@ FilterContainer.prototype.optimize = function() {
         dropTask(this.optimizeTaskId);
         this.optimizeTaskId = undefined;
     }
+
+    //this.filterClassHistogram();
+
     const filterBucketId = FilterBucket.fid;
     for ( let bits = 0, n = this.categories.length; bits < n; bits++ ) {
         const bucket = this.categories[bits];
-        if ( bucket === undefined ) { continue; }
+        if ( bucket === null ) { continue; }
         for ( const [ th, iunit ] of bucket ) {
             if ( filterData[iunit+0] !== filterBucketId ) { continue; }
             const optimizeBits =
@@ -3644,11 +3658,15 @@ FilterContainer.prototype.optimize = function() {
             bucket.set(th, inewunit);
         }
     }
+    // Here we do not optimize origHNTrieContainer because many origin-related
+    // tries are instantiated on demand.
     keyvalStore.setItem(
-        'SNFE.FilterHostnameDict.trieDetails',
+        'SNFE.destHNTrieContainer.trieDetails',
         destHNTrieContainer.optimize()
     );
     bidiTrieOptimize();
+
+    //this.filterClassHistogram();
 };
 
 /******************************************************************************/
@@ -3665,7 +3683,7 @@ FilterContainer.prototype.toSelfie = function(storage, path) {
         const selfie = [];
         for ( let bits = 0, n = this.categories.length; bits < n; bits++ ) {
             const bucket = this.categories[bits];
-            if ( bucket === undefined ) { continue; }
+            if ( bucket === null ) { continue; }
             selfie.push([ bits, Array.from(bucket) ]);
         }
         return selfie;
@@ -3673,7 +3691,7 @@ FilterContainer.prototype.toSelfie = function(storage, path) {
 
     bidiTrieOptimize(true);
     keyvalStore.setItem(
-        'SNFE.filterOrigin.trieDetails',
+        'SNFE.origHNTrieContainer.trieDetails',
         origHNTrieContainer.optimize()
     );
 
@@ -3756,8 +3774,8 @@ FilterContainer.prototype.fromSelfie = function(storage, path) {
             this.blockFilterCount = selfie.blockFilterCount;
             this.discardedCount = selfie.discardedCount;
             urlTokenizer.fromSelfie(selfie.urlTokenizer);
-            for ( const [ catBits, bucket ] of selfie.categories ) {
-                this.categories[catBits] = new Map(bucket);
+            for ( const [ bits, bucket ] of selfie.categories ) {
+                this.categories[bits] = new Map(bucket);
             }
             return true;
         }),
@@ -3815,19 +3833,18 @@ FilterContainer.prototype.matchAndFetchModifiers = function(
     const catBits11 = ModifyAction | typeBits | partyBits;
 
     const bucket00 = this.categories[catBits00];
-    const bucket01 = typeBits !== 0
-        ? this.categories[catBits01]
-        : undefined;
+    const bucket01 = typeBits !== 0 ? this.categories[catBits01]
+        : null;
     const bucket10 = partyBits !== 0
         ? this.categories[catBits10]
-        : undefined;
+        : null;
     const bucket11 = typeBits !== 0 && partyBits !== 0
         ? this.categories[catBits11]
-        : undefined;
+        : null;
 
     if (
-        bucket00 === undefined && bucket01 === undefined &&
-        bucket10 === undefined && bucket11 === undefined
+        bucket00 === null && bucket01 === null &&
+        bucket10 === null && bucket11 === null
     ) {
         return;
     }
@@ -3848,28 +3865,28 @@ FilterContainer.prototype.matchAndFetchModifiers = function(
         if ( th === 0 ) { break; }
         env.th = th;
         $tokenBeg = tokenHashes[i+1];
-        if ( bucket00 !== undefined ) {
+        if ( bucket00 !== null ) {
             const iunit = bucket00.get(th);
             if ( iunit !== undefined ) {
                 env.bits = catBits00; env.iunit = iunit;
                 filterMatchAndFetchModifiers(iunit, env);
             }
         }
-        if ( bucket01 !== undefined ) {
+        if ( bucket01 !== null ) {
             const iunit = bucket01.get(th);
             if ( iunit !== undefined ) {
                 env.bits = catBits01; env.iunit = iunit;
                 filterMatchAndFetchModifiers(iunit, env);
             }
         }
-        if ( bucket10 !== undefined ) {
+        if ( bucket10 !== null ) {
             const iunit = bucket10.get(th);
             if ( iunit !== undefined ) {
                 env.bits = catBits10; env.iunit = iunit;
                 filterMatchAndFetchModifiers(iunit, env);
             }
         }
-        if ( bucket11 !== undefined ) {
+        if ( bucket11 !== null ) {
             const iunit = bucket11.get(th);
             if ( iunit !== undefined ) {
                 env.bits = catBits11; env.iunit = iunit;
@@ -3979,20 +3996,20 @@ FilterContainer.prototype.realmMatchString = function(
 
     const bucket00 = exactType === 0
         ? this.categories[catBits00]
-        : undefined;
+        : null;
     const bucket01 = exactType !== 0 || typeBits !== 0
         ? this.categories[catBits01]
-        : undefined;
+        : null;
     const bucket10 = exactType === 0 && partyBits !== 0
         ? this.categories[catBits10]
-        : undefined;
+        : null;
     const bucket11 = (exactType !== 0 || typeBits !== 0) && partyBits !== 0
         ? this.categories[catBits11]
-        : undefined;
+        : null;
 
     if (
-        bucket00 === undefined && bucket01 === undefined &&
-        bucket10 === undefined && bucket11 === undefined
+        bucket00 === null && bucket01 === null &&
+        bucket10 === null && bucket11 === null
     ) {
         return false;
     }
@@ -4002,25 +4019,25 @@ FilterContainer.prototype.realmMatchString = function(
     // Pure hostname-based filters
     let tokenHash = DOT_TOKEN_HASH;
     if (
-        (bucket00 !== undefined) &&
+        (bucket00 !== null) &&
         (iunit = bucket00.get(tokenHash) || 0) !== 0 &&
         (filterMatch(iunit) === true)
     ) {
         catBits = catBits00;
     } else if (
-        (bucket01 !== undefined) &&
+        (bucket01 !== null) &&
         (iunit = bucket01.get(tokenHash) || 0) !== 0 &&
         (filterMatch(iunit) === true)
     ) {
         catBits = catBits01;
     } else if (
-        (bucket10 !== undefined) &&
+        (bucket10 !== null) &&
         (iunit = bucket10.get(tokenHash) || 0) !== 0 &&
         (filterMatch(iunit) === true)
     ) {
         catBits = catBits10;
     } else if (
-        (bucket11 !== undefined) &&
+        (bucket11 !== null) &&
         (iunit = bucket11.get(tokenHash) || 0) !== 0 &&
         (filterMatch(iunit) === true)
     ) {
@@ -4035,7 +4052,7 @@ FilterContainer.prototype.realmMatchString = function(
             if ( tokenHash === 0 ) { return false; }
             $tokenBeg = tokenHashes[i+1];
             if (
-                (bucket00 !== undefined) &&
+                (bucket00 !== null) &&
                 (iunit = bucket00.get(tokenHash) || 0) !== 0 &&
                 (filterMatch(iunit) === true)
             ) {
@@ -4043,7 +4060,7 @@ FilterContainer.prototype.realmMatchString = function(
                 break;
             }
             if (
-                (bucket01 !== undefined) &&
+                (bucket01 !== null) &&
                 (iunit = bucket01.get(tokenHash) || 0) !== 0 &&
                 (filterMatch(iunit) === true)
             ) {
@@ -4051,7 +4068,7 @@ FilterContainer.prototype.realmMatchString = function(
                 break;
             }
             if (
-                (bucket10 !== undefined) &&
+                (bucket10 !== null) &&
                 (iunit = bucket10.get(tokenHash) || 0) !== 0 &&
                 (filterMatch(iunit) === true)
             ) {
@@ -4059,7 +4076,7 @@ FilterContainer.prototype.realmMatchString = function(
                 break;
             }
             if (
-                (bucket11 !== undefined) &&
+                (bucket11 !== null) &&
                 (iunit = bucket11.get(tokenHash) || 0) !== 0 &&
                 (filterMatch(iunit) === true)
             ) {
@@ -4447,34 +4464,21 @@ FilterContainer.prototype.test = async function(docURL, type, url) {
 */
 
 FilterContainer.prototype.bucketHistogram = function() {
-/*
     const results = [];
     for ( let bits = 0, n = this.categories.length; bits < n; bits++ ) {
         const category = this.categories[bits];
-        if ( category === undefined ) { continue; }
+        if ( category === null ) { continue; }
         for ( const [ th, iunit ] of category ) {
             const token = urlTokenizer.stringFromTokenHash(th);
-            const f = filterUnits[iunit];
-            if ( f instanceof FilterBucket ) {
-                results.push({ bits: bits.toString(16), token, size: f.size, f });
-                continue;
-            }
-            if ( f instanceof FilterHostnameDict ) {
-                results.push({ bits: bits.toString(16), token, size: f.size, f });
-                continue;
-            }
-            if ( f instanceof FilterJustOrigin ) {
-                results.push({ bits: bits.toString(16), token, size: f.size, f });
-                continue;
-            }
-            results.push({ bits: bits.toString(16), token, size: 1, f });
+            const fc = filterGetClass(iunit);
+            const count = fc.getCount !== undefined ? fc.getCount(iunit) : 1;
+            results.push({ bits: bits.toString(16), token, count, f: fc.name });
         }
     }
     results.sort((a, b) => {
-        return b.size - a.size;
+        return b.count - a.count;
     });
     console.info(results);
-*/
 };
 
 /*******************************************************************************
@@ -4516,59 +4520,27 @@ FilterContainer.prototype.bucketHistogram = function() {
 */
 
 FilterContainer.prototype.filterClassHistogram = function() {
-/*
     const filterClassDetails = new Map();
-
     for ( const fclass of filterClasses ) {
         filterClassDetails.set(fclass.fid, { name: fclass.name, count: 0, });
     }
-    // Artificial classes to report content counts
-    filterClassDetails.set(1000, { name: 'FilterPlainTrie Content', count: 0, });
-    filterClassDetails.set(1001, { name: 'FilterHostnameDict Content', count: 0, });
-
-    const countFilter = function(f) {
-        if ( f instanceof Object === false ) { return; }
-        filterClassDetails.get(f.fid).count += 1;
+    const countFilter = idata => {
+        const fc = filterGetClass(idata);
+        filterClassDetails.get(fc.fid).count += 1;
+        if ( fc.forEach === undefined ) { return; }
+        fc.forEach(idata, iunit => { countFilter(iunit); });
     };
-
-    for ( const f of filterUnits ) {
-        if ( f === null ) { continue; }
-        countFilter(f);
-        if ( f instanceof FilterCollection ) {
-            let i = f.i;
-            while ( i !== 0 ) {
-                countFilter(filterUnits[filterData[i+0]]);
-                i = filterData[i+1];
-            }
-            if ( f instanceof FilterPlainTrie && f.itrie !== 0 ) {
-                filterClassDetails.get(1000).count +=
-                    Array.from(bidiTrie.iterateTrie(f.itrie)).length;
-            }
-            continue;
-        }
-        if ( f instanceof FilterHostnameDict ) {
-            filterClassDetails.get(1001).count += f.size;
-            continue;
-        }
-        if ( f instanceof FilterCompositeAll ) {
-            let i = f.i;
-            while ( i !== 0 ) {
-                countFilter(filterUnits[filterData[i+0]]);
-                i = filterData[i+1];
-            }
-            continue;
-        }
-        if ( f instanceof FilterPlainTrie && f.itrie !== 0 ) {
-            filterClassDetails.get(1000).count +=
-                Array.from(bidiTrie.iterateTrie(f.itrie)).length;
-            continue;
+    for ( let bits = 0, n = this.categories.length; bits < n; bits++ ) {
+        const category = this.categories[bits];
+        if ( category === null ) { continue; }
+        for ( const iunit of category.values() ) {
+            countFilter(iunit);
         }
     }
     const results = Array.from(filterClassDetails.values()).sort((a, b) => {
         return b.count - a.count;
     });
     console.info(results);
-*/
 };
 
 /******************************************************************************/

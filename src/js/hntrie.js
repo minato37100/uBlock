@@ -242,7 +242,7 @@ class HNTrieContainer {
     }
 
     dumpTrie(iroot) {
-        let hostnames = Array.from(this.iterateTrie(iroot));
+        let hostnames = Array.from(this.trieIterator(iroot));
         if ( String.prototype.padStart instanceof Function ) {
             const maxlen = Math.min(
                 hostnames.reduce((maxlen, hn) => Math.max(maxlen, hn.length), 0),
@@ -255,7 +255,7 @@ class HNTrieContainer {
         }
     }
 
-    iterateTrie(iroot) {
+    trieIterator(iroot) {
         return {
             value: undefined,
             done: false,
@@ -279,7 +279,7 @@ class HNTrieContainer {
                     const i1 = i0 + (v & 0x7F);
                     while ( i0 < i1 ) {
                         this.charPtr -= 1;
-                        this.charBuf[this.charPtr] = this.buf[i0];
+                        this.charBuf[this.charPtr] = this.container.buf[i0];
                         i0 += 1;
                     }
                     this.icell = this.container.buf32[this.icell+1];
@@ -300,6 +300,7 @@ class HNTrieContainer {
             charPtr: 256,
             forks: [],
             textDecoder: new TextDecoder(),
+            [Symbol.iterator]() { return this; },
         };
     }
 

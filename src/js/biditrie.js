@@ -699,12 +699,12 @@ class BidiTrieContainer {
     }
 
     dumpTrie(iroot) {
-        for ( const s of this.iterateTrie(iroot) ) {
+        for ( const s of this.trieIterator(iroot) ) {
             console.log(s);
         }
     }
 
-    iterateTrie(iroot) {
+    trieIterator(iroot) {
         return {
             value: undefined,
             done: false,
@@ -753,6 +753,7 @@ class BidiTrieContainer {
             charPtr: 0,
             forks: [],
             textDecoder: new TextDecoder(),
+            [Symbol.iterator]() { return this; },
         };
     }
 
