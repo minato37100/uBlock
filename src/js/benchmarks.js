@@ -176,8 +176,7 @@ const loadBenchmarkDataset = (( ) => {
             if ( fctxt.type === 'main_frame' || fctxt.type === 'sub_frame' ) {
                 staticNetFilteringEngine.matchAndFetchModifiers(fctxt, 'csp');
             }
-            // Filtering on http headers is not enabled by default
-            // staticNetFilteringEngine.matchHeaders(fctxt, []);
+            staticNetFilteringEngine.matchHeaders(fctxt, []);
         } else if ( redirectEngine !== undefined ) {
             staticNetFilteringEngine.redirectRequest(redirectEngine, fctxt);
         }
