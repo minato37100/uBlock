@@ -1734,9 +1734,9 @@ const FilterModifier = class {
 
     static fromCompiled(args) {
         const idata = filterDataAllocLen(4);
-        filterData[idata+0] = args[0];                      // fid
-        filterData[idata+1] = args[1];                      // actionBits
-        filterData[idata+2] = args[2];                      // type
+        filterData[idata+0] = args[0];          // fid
+        filterData[idata+1] = args[1];          // actionBits
+        filterData[idata+2] = args[2];          // type
         filterData[idata+3] = filterRefAdd({
             value: args[3],
             cache: null,
@@ -2000,7 +2000,12 @@ const FilterHostnameDict = class {
     }
 
     static add(idata, hn) {
-        filterRefs[filterData[idata+3]].hostnames.push(hn);
+        const itrie = filterData[idata+1];
+        if ( itrie === 0 ) {
+            filterRefs[filterData[idata+3]].hostnames.push(hn);
+        } else {
+            destHNTrieContainer.setNeedle(hn).add(itrie);
+        }
     }
 
     static optimize(idata) {
@@ -3555,6 +3560,7 @@ FilterContainer.prototype.reset = function() {
     this.goodFilters = new Set();
     this.badFilters = new Set();
     this.categories.fill(null);
+    this.optimized = false;
 
     urlTokenizer.resetKnownTokens();
 
@@ -3664,7 +3670,7 @@ FilterContainer.prototype.freeze = function() {
     // Optimizing is not critical for the static network filtering engine to
     // work properly, so defer this until later to allow for reduced delay to
     // readiness when no valid selfie is available.
-    if ( this.optimizeTaskId === undefined ) {
+    if ( this.optimized !== true && this.optimizeTaskId === undefined ) {
         this.optimizeTaskId = queueTask(( ) => {
             this.optimizeTaskId = undefined;
             this.optimize(10);
@@ -3679,6 +3685,10 @@ FilterContainer.prototype.optimize = function(throttle = 0) {
         dropTask(this.optimizeTaskId);
         this.optimizeTaskId = undefined;
     }
+
+    // This will prevent pointless optimize cycles when incrementally adding
+    // filters.
+    this.optimized = true;
 
     //this.filterClassHistogram();
 
@@ -3714,6 +3724,7 @@ FilterContainer.prototype.optimize = function(throttle = 0) {
             }
         }
     }
+
     // Here we do not optimize origHNTrieContainer because many origin-related
     // tries are instantiated on demand.
     keyvalStore.setItem(
