@@ -128,7 +128,7 @@
     "description": "Tooltip used for the logger icon in the panel"
   },
   "popupTipReport": {
-    "message": "Подайте сигнал за проблем на този уебсайт",
+    "message": "Докладване на проблем с този уебсайт",
     "description": "Tooltip used for the 'chat' icon in the panel"
   },
   "popupTipNoPopups": {
@@ -312,7 +312,7 @@
     "description": "English: Click, Ctrl-click"
   },
   "pickerContextMenuEntry": {
-    "message": "Блокиране на елемент...",
+    "message": "Блокиране на елемент…",
     "description": "An entry in the browser's contextual menu"
   },
   "settingsCollapseBlockedPrompt": {
@@ -335,17 +335,25 @@
     "message": "Достъпност за хора с цветна слепота",
     "description": "English: Color-blind friendly"
   },
+  "settingsAppearance": {
+    "message": "Външен вид",
+    "description": "Section for controlling user interface appearance"
+  },
+  "settingsThemeLabel": {
+    "message": "Тема",
+    "description": "Label for checkbox to enable a custom dark theme"
+  },
+  "settingsThemeAccent0Label": {
+    "message": "Потребителски цвят на акцента",
+    "description": "Label for checkbox to pick an accent color"
+  },
   "settingsCloudStorageEnabledPrompt": {
     "message": "Включване на поддръжка за съхранение в облак",
     "description": ""
   },
   "settingsAdvancedUserPrompt": {
-    "message": "Аз съм опитен потребител (<a href='https://github.com/gorhill/uBlock/wiki/Advanced-user-features'>Допълнително четиво</a>)",
-    "description": ""
-  },
-  "settingsAdvancedUserSettings": {
-    "message": "разширени настройки",
-    "description": "For the tooltip of a link which gives access to advanced settings"
+    "message": "Аз съм опитен потребител",
+    "description": "Checkbox to let user access advanced, technical features"
   },
   "settingsPrefetchingDisabledPrompt": {
     "message": "Изключване на предварителното извличане (за избягване на всяка връзка за блокираните мрежови заявки)",
@@ -391,6 +399,18 @@
     "message": "Разкриване на каноничните имена",
     "description": "background information: https://github.com/uBlockOrigin/uBlock-issues/issues/1513"
   },
+  "settingsAdvanced": {
+    "message": "Разширени",
+    "description": "Section for controlling advanced-user settings"
+  },
+  "settingsAdvancedSynopsis": {
+    "message": "Функции, подходящи само за технически грамотни потребители",
+    "description": "Description of section controlling advanced-user settings"
+  },
+  "settingsAdvancedUserSettings": {
+    "message": "разширени настройки",
+    "description": "For the tooltip of a link which gives access to advanced settings"
+  },
   "settingsLastRestorePrompt": {
     "message": "Последно възстановяване:",
     "description": "English: Last restore:"
@@ -434,6 +454,10 @@
   "3pIgnoreGenericCosmeticFiltersInfo": {
     "message": "Общокозметични са филтрите, предназначени за прилагане във всички сайтове. Разрешаването на тази опция ще премахне натоварването на паметта и процесора, добавено към уеб страниците в резултат на обработката на общите козметични филтри.",
     "description": "Describes the purpose of the 'Ignore generic cosmetic filters' feature."
+  },
+  "3pSuspendUntilListsAreLoaded": {
+    "message": "Преустановяване на мрежовата дейност, докато се заредят всички списъци с филтри",
+    "description": "A checkbox in the 'Filter lists' pane"
   },
   "3pListsOfBlockedHostsHeader": {
     "message": "Списъци на блокираните хостове",
@@ -588,8 +612,8 @@
     "description": "English: a sort option for list of rules."
   },
   "whitelistPrompt": {
-    "message": "Списък на адресите, за които uBlock Origin ще бъде изключен. Един запис на ред. Недействителните адреси ще бъдат пренебрегнати и коментирани.",
-    "description": "The name of the trusted sites pane."
+    "message": "Указанията за доверени сайтове определят кои уеб страници трябва да бъдат изключени от uBlock Origin. По един запис на ред.",
+    "description": "A concise description of the 'Trusted sites' pane."
   },
   "whitelistImport": {
     "message": "Внасяне от файл...",
@@ -864,7 +888,7 @@
     "description": "Text for button which open an external webpage in Support pane"
   },
   "supportFindSpecificButton": {
-    "message": "Намерете подобни доклади",
+    "message": "Намиране на подобни доклади",
     "description": "A clickable link in the filter issue reporter section"
   },
   "supportS1H": {
@@ -888,7 +912,7 @@
     "description": "Header of 'Filter issues' section in Support pane"
   },
   "supportS3P1": {
-    "message": "Докладвайте за проблеми с филтъра с конкретни уебсайтове в <span data-url=\"https://github.com/uBlockOrigin/uAssets/issues?q=is%3Aissue\"><code>uBlockOrigin/uAssets</code> проследяване на проблеми</span>. Изисква се акаунт в GitHub.",
+    "message": "Докладвайте за проблеми с филтрирането на конкретни уебсайтове в <span data-url=\"https://github.com/uBlockOrigin/uAssets/issues?q=is%3Aissue\"><code>uBlockOrigin/uAssets</code> за проследяване на проблеми</span>. <u>Изисква се акаунт в GitHub.</u>",
     "description": "First paragraph of 'Filter issues' section in Support pane"
   },
   "supportS3P2": {
@@ -904,7 +928,7 @@
     "description": "Header of 'Bug report' section in Support pane"
   },
   "supportS4P1": {
-    "message": "Докладвайте за проблеми със самия uBlock Origin в <span data-url=\"https://github.com/uBlockOrigin/uBlock-issues/issues?q=is%3Aissue\"><code>uBlockOrigin/uBlock-issue</code> проследяване на проблеми</span>. Изисква се акаунт в GitHub.",
+    "message": "Докладвайте за проблеми със самия uBlock Origin в <span data-url=\"https://github.com/uBlockOrigin/uBlock-issues/issues?q=is%3Aissue\"><code>uBlockOrigin/uBlock-issue</code> за проследяване на проблеми</span>. <u>Изисква се акаунт в GitHub.</u>",
     "description": "First paragraph of 'Bug report' section in Support pane"
   },
   "supportS5H": {
@@ -920,11 +944,11 @@
     "description": "Second paragraph of 'Troubleshooting Information' section in Support pane"
   },
   "supportS6H": {
-    "message": "Подайте сигнал за проблем с филтъра",
+    "message": "Докладване на проблем с филтъра",
     "description": "Header of 'Report a filter issue' section in Support pane"
   },
   "supportS6P1S1": {
-    "message": "За да избегнете натоварването на доброволците с дублиращи се доклади, моля, проверете дали проблемът все още не е докладван.",
+    "message": "За да се избегне натоварването на доброволците с дублиращи се доклади, моля, проверете дали проблемът все още не е докладван.",
     "description": "A paragraph in the filter issue reporter section"
   },
   "supportS6URL": {
@@ -956,7 +980,7 @@
     "description": "An entry in the widget used to select the type of issue"
   },
   "supportS6Select1Option5": {
-    "message": "Прекъсва, когато uBlock Origin е активиран",
+    "message": "Функционира неправилно, когато uBlock Origin е активиран",
     "description": "An entry in the widget used to select the type of issue"
   },
   "supportS6Select1Option6": {
@@ -964,7 +988,7 @@
     "description": "An entry in the widget used to select the type of issue"
   },
   "supportS6Checkbox1": {
-    "message": "Маркиране на уеб страницата като &ldquo;NSFW&rdquo; (<a href=\"https://wikipedia.org/wiki/Not_safe_for_work\">&ldquo;небезопасна за работа&rdquo;</a>)",
+    "message": "Маркиране на уеб страницата като &ldquo;NSFW&rdquo; (<a href=\"https://wikipedia.org/wiki/Not_safe_for_work\">&ldquo;не е безопасна за работа&rdquo;</a>)",
     "description": "A checkbox to use for NSFW sites"
   },
   "supportRedact": {
@@ -1012,7 +1036,7 @@
     "description": "Shown in the About pane"
   },
   "aboutCDNsInfo": {
-    "message": "Ще бъде използван случайно избран CDN, когато трябва да се актуализира списък с филтри",
+    "message": "Ще бъде използван случайно избран CDN, когато трябва да се обнови списък с филтри",
     "description": "Shown in the About pane"
   },
   "aboutBackupDataButton": {
@@ -1024,7 +1048,7 @@
     "description": "English: my-ublock-backup_{{datetime}}.txt"
   },
   "aboutRestoreDataButton": {
-    "message": "Внасяне от файл...",
+    "message": "Възстановяване от файл...",
     "description": "English: Restore from file..."
   },
   "aboutResetDataButton": {

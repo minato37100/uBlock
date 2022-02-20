@@ -128,7 +128,7 @@
     "description": "Tooltip used for the logger icon in the panel"
   },
   "popupTipReport": {
-    "message": "Report an issue on this website",
+    "message": "דווח על סוגייה באתר זה",
     "description": "Tooltip used for the 'chat' icon in the panel"
   },
   "popupTipNoPopups": {
@@ -335,17 +335,25 @@
     "message": "ידידותי לעיוורי צבעים",
     "description": "English: Color-blind friendly"
   },
+  "settingsAppearance": {
+    "message": "נראות",
+    "description": "Section for controlling user interface appearance"
+  },
+  "settingsThemeLabel": {
+    "message": "ערכת נושא",
+    "description": "Label for checkbox to enable a custom dark theme"
+  },
+  "settingsThemeAccent0Label": {
+    "message": "צבע הדגשה מותאם",
+    "description": "Label for checkbox to pick an accent color"
+  },
   "settingsCloudStorageEnabledPrompt": {
     "message": "הפעל אחסון בענן",
     "description": ""
   },
   "settingsAdvancedUserPrompt": {
     "message": "אני משתמש מתקדם (<a href='https://github.com/gorhill/uBlock/wiki/Advanced-user-features'>נדרש לקרוא</a>)",
-    "description": ""
-  },
-  "settingsAdvancedUserSettings": {
-    "message": "הגדרות מתקדמות",
-    "description": "For the tooltip of a link which gives access to advanced settings"
+    "description": "Checkbox to let user access advanced, technical features"
   },
   "settingsPrefetchingDisabledPrompt": {
     "message": "כבה אחזור מוקדם של משאבים (על מנת למנוע מחיבורים של בקשות רשת חסומות להישלח)",
@@ -391,6 +399,18 @@
     "message": "חשוף רשומות DNS מסוג CNAME",
     "description": "background information: https://github.com/uBlockOrigin/uBlock-issues/issues/1513"
   },
+  "settingsAdvanced": {
+    "message": "מתקדם",
+    "description": "Section for controlling advanced-user settings"
+  },
+  "settingsAdvancedSynopsis": {
+    "message": "מאפיינים למשתמשים טכניים בלבד",
+    "description": "Description of section controlling advanced-user settings"
+  },
+  "settingsAdvancedUserSettings": {
+    "message": "הגדרות מתקדמות",
+    "description": "For the tooltip of a link which gives access to advanced settings"
+  },
   "settingsLastRestorePrompt": {
     "message": "שחזור אחרון:",
     "description": "English: Last restore:"
@@ -434,6 +454,10 @@
   "3pIgnoreGenericCosmeticFiltersInfo": {
     "message": "מסננים קוסמטיים כלליים - אלה הם המסננים הקוסמטיים, אשר מיועדים להיות מוחלים על כל דפי האינטרנט. אפשור הגדרה זו תוריד את צריכת הזיכרון והמעבד אשר מתווספות לדפי אינטרנט כתוצאה משימוש במסננים קוסמטיים כלליים.\n\nמומלץ לאפשר הגדרה זו במכשירים פחות חזקים.",
     "description": "Describes the purpose of the 'Ignore generic cosmetic filters' feature."
+  },
+  "3pSuspendUntilListsAreLoaded": {
+    "message": "השהה פעילות רשת עד לסיום טעינת כל רשימות הסינון",
+    "description": "A checkbox in the 'Filter lists' pane"
   },
   "3pListsOfBlockedHostsHeader": {
     "message": "רשימה של דומיינים חסומים",
@@ -496,7 +520,7 @@
     "description": "used as a tooltip for the clock icon beside a list"
   },
   "3pUpdating": {
-    "message": "מעדכן...",
+    "message": "מעדכן…",
     "description": "used as a tooltip for the spinner icon beside a list"
   },
   "3pNetworkError": {
@@ -552,7 +576,7 @@
     "description": "Will discard manually-edited content and exit manual-edit mode"
   },
   "rulesImport": {
-    "message": "ייבא מקובץ...",
+    "message": "ייבא מקובץ…",
     "description": ""
   },
   "rulesExport": {
@@ -589,7 +613,7 @@
   },
   "whitelistPrompt": {
     "message": "הרשומות באתרים המהימנים מציינות באילו דפי אינטרנט uBlock Origin לא יהיה פעיל. רשומה אחת בכל שורה. רשומות לא חוקיות תתעלמנה בשקט ויסומנו כהערות.",
-    "description": "The name of the trusted sites pane."
+    "description": "A concise description of the 'Trusted sites' pane."
   },
   "whitelistImport": {
     "message": "ייבא וצרף",
@@ -860,11 +884,11 @@
     "description": "Text for button which open an external webpage in Support pane"
   },
   "supportReportSpecificButton": {
-    "message": "Create new report",
+    "message": "צור דוח חדש",
     "description": "Text for button which open an external webpage in Support pane"
   },
   "supportFindSpecificButton": {
-    "message": "Find similar reports",
+    "message": "מצא דוחות דומים",
     "description": "A clickable link in the filter issue reporter section"
   },
   "supportS1H": {
@@ -920,51 +944,51 @@
     "description": "Second paragraph of 'Troubleshooting Information' section in Support pane"
   },
   "supportS6H": {
-    "message": "Report a filter issue",
+    "message": "דווח על סוגיית מסנן",
     "description": "Header of 'Report a filter issue' section in Support pane"
   },
   "supportS6P1S1": {
-    "message": "To avoid burdening volunteers with duplicate reports, please verify that the issue has not already been reported.",
+    "message": "כדי להימנע מהעמקת מתנדבים בדוחות כפולים, ודא שהבעיה טרם דווחה.",
     "description": "A paragraph in the filter issue reporter section"
   },
   "supportS6URL": {
-    "message": "Address of the web page:",
+    "message": "כתובת של דף האינטרנט:",
     "description": "Label for the URL of the page"
   },
   "supportS6Select1": {
-    "message": "The web page...",
+    "message": "דף האינטרנט…",
     "description": "Label for widget to select type of issue"
   },
   "supportS6Select1Option0": {
-    "message": "-- Pick an entry --",
+    "message": "-- בחר ערך --",
     "description": "An entry in the widget used to select the type of issue"
   },
   "supportS6Select1Option1": {
-    "message": "Shows ads or ad leftovers",
+    "message": "הצגת פרסומות או שאריות של פרסומות",
     "description": "An entry in the widget used to select the type of issue"
   },
   "supportS6Select1Option2": {
-    "message": "Has overlays or other nuisances",
+    "message": "יש שכבות על או מטרד אחר",
     "description": "An entry in the widget used to select the type of issue"
   },
   "supportS6Select1Option3": {
-    "message": "Detects uBlock Origin",
+    "message": "מזהה מקור uBlock",
     "description": "An entry in the widget used to select the type of issue"
   },
   "supportS6Select1Option4": {
-    "message": "Has privacy-related issues",
+    "message": "יש בעיות הקשורות לפרטיות",
     "description": "An entry in the widget used to select the type of issue"
   },
   "supportS6Select1Option5": {
-    "message": "Malfunctions when uBlock Origin is enabled",
+    "message": "תקלות כאשר uBlock Origin מופעל",
     "description": "An entry in the widget used to select the type of issue"
   },
   "supportS6Select1Option6": {
-    "message": "Opens unwanted tabs or windows",
+    "message": "פתיחת כרטיסיות או חלונות לא רצויים",
     "description": "An entry in the widget used to select the type of issue"
   },
   "supportS6Checkbox1": {
-    "message": "Label the web page as “NSFW” (<a href=\"https://wikipedia.org/wiki/Not_safe_for_work\">“Not Safe For Work”</a>)",
+    "message": "סמן דף אינטרנט זה בתור ”NSFW” (<a href=\"https://he.wikipedia.org/wiki/NSFW\">“Not Safe For Work”</a>)",
     "description": "A checkbox to use for NSFW sites"
   },
   "supportRedact": {
@@ -1140,7 +1164,7 @@
     "description": "tooltip"
   },
   "cloudNoData": {
-    "message": "...\n...",
+    "message": "…\n…",
     "description": ""
   },
   "cloudDeviceNamePrompt": {

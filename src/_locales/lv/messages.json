@@ -335,17 +335,25 @@
     "message": "Daltoniķiem draudzīgs",
     "description": "English: Color-blind friendly"
   },
+  "settingsAppearance": {
+    "message": "Izskats",
+    "description": "Section for controlling user interface appearance"
+  },
+  "settingsThemeLabel": {
+    "message": "Izskats",
+    "description": "Label for checkbox to enable a custom dark theme"
+  },
+  "settingsThemeAccent0Label": {
+    "message": "Pielāgota izcēluma krāsa",
+    "description": "Label for checkbox to pick an accent color"
+  },
   "settingsCloudStorageEnabledPrompt": {
     "message": "Aktivizēt mākoņdatu glabāšanas atbalstu",
     "description": ""
   },
   "settingsAdvancedUserPrompt": {
     "message": "Es esmu pieredzējis lietotājs (<a href='https://github.com/gorhill/uBlock/wiki/Advanced-user-features'>Vēlams izlasīt</a>)",
-    "description": ""
-  },
-  "settingsAdvancedUserSettings": {
-    "message": "papildu iestatījumi",
-    "description": "For the tooltip of a link which gives access to advanced settings"
+    "description": "Checkbox to let user access advanced, technical features"
   },
   "settingsPrefetchingDisabledPrompt": {
     "message": "Atslēgt pirmsielādi (lai novērstu bloķētus tīkla pieprasījumus)",
@@ -388,8 +396,20 @@
     "description": "background information: https://github.com/gorhill/uBlock/issues/3150"
   },
   "settingsUncloakCnamePrompt": {
-    "message": "Uncloak canonical names",
+    "message": "Atslēpt kanoniskos nosaukumus",
     "description": "background information: https://github.com/uBlockOrigin/uBlock-issues/issues/1513"
+  },
+  "settingsAdvanced": {
+    "message": "Paplašināti",
+    "description": "Section for controlling advanced-user settings"
+  },
+  "settingsAdvancedSynopsis": {
+    "message": "Iespējas, kas piemērotas tikai tehniskiem lietotājiem.",
+    "description": "Description of section controlling advanced-user settings"
+  },
+  "settingsAdvancedUserSettings": {
+    "message": "papildu iestatījumi",
+    "description": "For the tooltip of a link which gives access to advanced settings"
   },
   "settingsLastRestorePrompt": {
     "message": "Pēdējā atjaunošana veikta:",
@@ -434,6 +454,10 @@
   "3pIgnoreGenericCosmeticFiltersInfo": {
     "message": "<p>Vispārīgie kosmētikas filtri ir kosmētikas filtri, kurus paredzēts piemērot visās tīmekļvietnēs.<p>Lai gan uBlock ₀ darbojas efektīvi, vispārīgie kosmētikas filtri dažās tīmekļa lapās var ievērojami noslogot atmiņu un centrālo procesoru.<p>Šīs opcijas izmantošana samazinās vispārīgo kosmētikas filtru izmantotās atmiņas un procesora noslodzi kā arī samazinās paša uBlock₀ izmantoto atmiņu.<p>Ieteicams izmantot zemas veiktspējas ierīcēm.",
     "description": "Describes the purpose of the 'Ignore generic cosmetic filters' feature."
+  },
+  "3pSuspendUntilListsAreLoaded": {
+    "message": "Atlikt tīkla darbības, līdz visi aizturēšanas saraksti ir ielādēti.",
+    "description": "A checkbox in the 'Filter lists' pane"
   },
   "3pListsOfBlockedHostsHeader": {
     "message": "Bloķēto hostu saraksti",
@@ -589,7 +613,7 @@
   },
   "whitelistPrompt": {
     "message": "Saraksts ar interneta resursiem, kuriem tiks atslēgts uBlock Origin. Viens ieraksts katrā rindiņā. Nederīgi interneta resursu nosaukumi tiks ignorēti bez brīdinājuma.",
-    "description": "The name of the trusted sites pane."
+    "description": "A concise description of the 'Trusted sites' pane."
   },
   "whitelistImport": {
     "message": "Importēt un pievienot",
@@ -724,11 +748,11 @@
     "description": "Label to identify a context field (typically a hostname)"
   },
   "loggerEntryDetailsRootContext": {
-    "message": "Root context",
+    "message": "Saknes konteksts",
     "description": "Label to identify a root context field (typically a hostname)"
   },
   "loggerEntryDetailsPartyness": {
-    "message": "Partyness",
+    "message": "Ballīte",
     "description": "Label to identify a field providing partyness information"
   },
   "loggerEntryDetailsType": {
@@ -836,7 +860,7 @@
     "description": "A label for the context column"
   },
   "loggerSettingHideColumnPartyness": {
-    "message": "{{input}} Partyness",
+    "message": "{{input}} Ballīte",
     "description": "A label for the partyness column"
   },
   "loggerExportFormatList": {
@@ -1028,7 +1052,7 @@
     "description": "English: Restore from file..."
   },
   "aboutResetDataButton": {
-    "message": "Iestatīt noklusējuma iestatījumus...",
+    "message": "Atgriezt noklusējuma iestatījumus...",
     "description": "English: Reset to default settings..."
   },
   "aboutRestoreDataConfirm": {

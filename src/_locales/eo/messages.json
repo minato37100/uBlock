@@ -335,17 +335,25 @@
     "message": "Afabla por kolorblinduloj",
     "description": "English: Color-blind friendly"
   },
+  "settingsAppearance": {
+    "message": "Appearance",
+    "description": "Section for controlling user interface appearance"
+  },
+  "settingsThemeLabel": {
+    "message": "Etoso",
+    "description": "Label for checkbox to enable a custom dark theme"
+  },
+  "settingsThemeAccent0Label": {
+    "message": "Custom accent color",
+    "description": "Label for checkbox to pick an accent color"
+  },
   "settingsCloudStorageEnabledPrompt": {
     "message": "Ŝalti subtenon por nelokdependa konservado",
     "description": ""
   },
   "settingsAdvancedUserPrompt": {
     "message": "Mi estas sperta uzanto (<a href='https://github.com/gorhill/uBlock/wiki/Advanced-user-features'>Nepra legaĵo</a>)",
-    "description": ""
-  },
-  "settingsAdvancedUserSettings": {
-    "message": "altgradaj agordoj",
-    "description": "For the tooltip of a link which gives access to advanced settings"
+    "description": "Checkbox to let user access advanced, technical features"
   },
   "settingsPrefetchingDisabledPrompt": {
     "message": "Malŝalti antaŭvenigadon (por preventi ajnan konekton de blokitaj retaj petoj)",
@@ -391,6 +399,18 @@
     "message": "Uncloak canonical names",
     "description": "background information: https://github.com/uBlockOrigin/uBlock-issues/issues/1513"
   },
+  "settingsAdvanced": {
+    "message": "Advanced",
+    "description": "Section for controlling advanced-user settings"
+  },
+  "settingsAdvancedSynopsis": {
+    "message": "Features suitable only for technical users",
+    "description": "Description of section controlling advanced-user settings"
+  },
+  "settingsAdvancedUserSettings": {
+    "message": "altgradaj agordoj",
+    "description": "For the tooltip of a link which gives access to advanced settings"
+  },
   "settingsLastRestorePrompt": {
     "message": "Lasta restaŭro:",
     "description": "English: Last restore:"
@@ -434,6 +454,10 @@
   "3pIgnoreGenericCosmeticFiltersInfo": {
     "message": "Generic cosmetic filters are those cosmetic filters which are meant to apply on all web sites. Enabling this option will eliminate the memory and CPU overhead added to web pages as a result of handling generic cosmetic filters.\n\nIt is recommended to enable this option on less powerful devices.",
     "description": "Describes the purpose of the 'Ignore generic cosmetic filters' feature."
+  },
+  "3pSuspendUntilListsAreLoaded": {
+    "message": "Suspend network activity until all filter lists are loaded",
+    "description": "A checkbox in the 'Filter lists' pane"
   },
   "3pListsOfBlockedHostsHeader": {
     "message": "Lists of blocked hosts",
@@ -572,7 +596,7 @@
     "description": "English: dynamic rule syntax and full documentation."
   },
   "rulesSort": {
-    "message": "Sort:",
+    "message": "Ordigi:",
     "description": "English: label for sort option."
   },
   "rulesSortByType": {
@@ -584,12 +608,12 @@
     "description": "English: a sort option for list of rules."
   },
   "rulesSortByDestination": {
-    "message": "Destination",
+    "message": "Celo",
     "description": "English: a sort option for list of rules."
   },
   "whitelistPrompt": {
     "message": "Via listo de gastignomoj por kiuj uBlock₀ estos malŝaltata. Unu gastignomo por ĉiu linio. Nevalidaj gastignomoj estos ignorataj silente.",
-    "description": "The name of the trusted sites pane."
+    "description": "A concise description of the 'Trusted sites' pane."
   },
   "whitelistImport": {
     "message": "Importi kaj postaldoni",
@@ -888,7 +912,7 @@
     "description": "Header of 'Filter issues' section in Support pane"
   },
   "supportS3P1": {
-    "message": "Report filter issues with specific websites to <span data-url=\"https://github.com/uBlockOrigin/uAssets/issues?q=is%3Aissue\"><code>uBlockOrigin/uAssets</code> issue tracker</span>. <u>Requires a GitHub account.</u>",
+    "message": "Report filter issues with specific websites to the <span data-url=\"https://github.com/uBlockOrigin/uAssets/issues?q=is%3Aissue\"><code>uBlockOrigin/uAssets</code> issue tracker</span>. <u>Requires a GitHub account.</u>",
     "description": "First paragraph of 'Filter issues' section in Support pane"
   },
   "supportS3P2": {
@@ -904,7 +928,7 @@
     "description": "Header of 'Bug report' section in Support pane"
   },
   "supportS4P1": {
-    "message": "Report issues with uBlock Origin itself to <span data-url=\"https://github.com/uBlockOrigin/uBlock-issues/issues?q=is%3Aissue\"><code>uBlockOrigin/uBlock-issue</code> issue tracker</span>. <u>Requires a GitHub account.</u>",
+    "message": "Report issues with uBlock Origin itself to the <span data-url=\"https://github.com/uBlockOrigin/uBlock-issues/issues?q=is%3Aissue\"><code>uBlockOrigin/uBlock-issue</code> issue tracker</span>. <u>Requires a GitHub account.</u>",
     "description": "First paragraph of 'Bug report' section in Support pane"
   },
   "supportS5H": {
@@ -932,7 +956,7 @@
     "description": "Label for the URL of the page"
   },
   "supportS6Select1": {
-    "message": "The web page...",
+    "message": "The web page…",
     "description": "Label for widget to select type of issue"
   },
   "supportS6Select1Option0": {
@@ -1140,7 +1164,7 @@
     "description": "tooltip"
   },
   "cloudNoData": {
-    "message": "...\n...",
+    "message": "…\n…",
     "description": ""
   },
   "cloudDeviceNamePrompt": {
@@ -1168,11 +1192,11 @@
     "description": ""
   },
   "contextMenuBlockElementInFrame": {
-    "message": "Block element in frame...",
+    "message": "Block element in frame…",
     "description": "An entry in the browser's contextual menu"
   },
   "contextMenuSubscribeToList": {
-    "message": "Subscribe to filter list...",
+    "message": "Subscribe to filter list…",
     "description": "An entry in the browser's contextual menu"
   },
   "contextMenuTemporarilyAllowLargeMediaElements": {

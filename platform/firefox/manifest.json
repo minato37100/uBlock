@@ -15,7 +15,7 @@
   "browser_specific_settings": {
     "gecko": {
       "id": "uBlock0@raymondhill.net",
-      "strict_min_version": "60.0"
+      "strict_min_version": "68.0"
     }
   },
   "commands": {
@@ -60,7 +60,8 @@
         "https://filterlists.com/*",
         "https://forums.lanik.us/*",
         "https://github.com/*",
-        "https://*.github.io/*"
+        "https://*.github.io/*",
+        "https://*.letsblock.it/*"
       ],
       "js": [
         "/js/scriptlets/subscriber.js"

@@ -6,6 +6,7 @@ body {
     max-width: 800px;
     }
 h3 {
+    color: var(--fieldset-header-ink);
     margin-bottom: 0;
     }
 .supportEntry {
@@ -13,6 +14,9 @@ h3 {
     }
 :root.mobile .supportEntry {
     flex-direction: column;
+    }
+.supportEntry > * {
+    min-width: 6em;
     }
 .supportEntry > div:first-of-type {
     flex-grow: 1;
@@ -38,6 +42,9 @@ body:not(.filterIssue) .body > div.e {
     display: none;
 }
 body.filterIssue .body > div:not(.e) {
+    display: none;
+}
+body.filterIssue #moreButton {
     display: none;
 }
 

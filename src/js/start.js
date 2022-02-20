@@ -134,6 +134,9 @@ const initializeTabs = async function() {
 /******************************************************************************/
 
 // To bring older versions up to date
+//
+// https://www.reddit.com/r/uBlockOrigin/comments/s7c9go/
+//   Abort suspending network requests when uBO is merely being installed.
 
 const onVersionReady = function(lastVersion) {
     if ( lastVersion === vAPI.app.version ) { return; }
@@ -141,7 +144,12 @@ const onVersionReady = function(lastVersion) {
     vAPI.storage.set({ version: vAPI.app.version });
 
     const lastVersionInt = vAPI.app.intFromVersion(lastVersion);
-    if ( lastVersionInt === 0 ) { return; }
+
+    // Special case: first installation
+    if ( lastVersionInt === 0 ) {
+        vAPI.net.unsuspend({ all: true, discard: true });
+        return;
+    }
 
     // Since built-in resources may have changed since last version, we
     // force a reload of all resources.
@@ -192,6 +200,23 @@ const onNetWhitelistReady = function(netWhitelistRaw, adminExtra) {
 // User settings are in memory
 
 const onUserSettingsReady = function(fetched) {
+    // Terminate suspended state?
+    const tnow = Date.now() - vAPI.T0;
+    if (
+        vAPI.Net.canSuspend() &&
+        fetched.suspendUntilListsAreLoaded === false
+    ) {
+        vAPI.net.unsuspend({ all: true, discard: true });
+        ubolog(`Unsuspend network activity listener at ${tnow} ms`);
+        µb.supportStats.unsuspendAfter = `${tnow} ms`;
+    } else if (
+        vAPI.Net.canSuspend() === false &&
+        fetched.suspendUntilListsAreLoaded
+    ) {
+        vAPI.net.suspend();
+        ubolog(`Suspend network activity listener at ${tnow} ms`);
+    }
+
     // `externalLists` will be deprecated in some future, it is kept around
     // for forward compatibility purpose, and should reflect the content of
     // `importedLists`.
@@ -248,9 +273,11 @@ const onCacheSettingsReady = async function(fetched) {
     if ( fetched.compiledMagic !== µb.systemSettings.compiledMagic ) {
         µb.compiledFormatChanged = true;
         µb.selfieIsInvalid = true;
+        ubolog(`Serialized format of static filter lists changed`);
     }
     if ( fetched.selfieMagic !== µb.systemSettings.selfieMagic ) {
         µb.selfieIsInvalid = true;
+        ubolog(`Serialized format of selfie changed`);
     }
     if ( µb.selfieIsInvalid ) {
         µb.selfieManager.destroy();
@@ -280,13 +307,6 @@ const onHiddenSettingsReady = async function() {
         ubolog(`Override default webext flavor with ${tokens}`);
     }
 
-    // Maybe override current network listener suspend state
-    if ( µb.hiddenSettings.suspendTabsUntilReady === 'no' ) {
-        vAPI.net.unsuspend(true);
-    } else if ( µb.hiddenSettings.suspendTabsUntilReady === 'yes' ) {
-        vAPI.net.suspend();
-    }
-
     // Maybe disable WebAssembly
     if ( vAPI.canWASM && µb.hiddenSettings.disableWebAssembly !== true ) {
         const wasmModuleFetcher = function(path) {
@@ -302,7 +322,7 @@ const onHiddenSettingsReady = async function() {
         });
     }
 
-    // Matbe override default cache storage
+    // Maybe override default cache storage
     const cacheBackend = await cacheStorage.select(
         µb.hiddenSettings.cacheStorageAPI
     );
@@ -427,7 +447,6 @@ let selfieIsValid = false;
 try {
     selfieIsValid = await µb.selfieManager.load();
     if ( selfieIsValid === true ) {
-        µb.supportStats.launchFromSelfie = true;
         ubolog(`Selfie ready ${Date.now()-vAPI.T0} ms after launch`);
     }
 } catch (ex) {
@@ -478,19 +497,10 @@ contextMenu.update();
 // default UI according to platform.
 if (
     browser.browserAction instanceof Object &&
-    browser.browserAction.setPopup instanceof Function
+    browser.browserAction.setPopup instanceof Function &&
+    µb.hiddenSettings.uiFlavor === 'classic'
 ) {
-    const env = vAPI.webextFlavor;
-    if (
-        µb.hiddenSettings.uiFlavor === 'classic' || (
-            µb.hiddenSettings.uiFlavor === 'unset' && (
-                env.soup.has('chromium') && env.major < 66 ||
-                env.soup.has('firefox') && env.major < 68
-            )
-        )
-    ) {
-        browser.browserAction.setPopup({ popup: 'popup.html' });
-    }
+    browser.browserAction.setPopup({ popup: 'popup.html' });
 }
 
 // https://github.com/uBlockOrigin/uBlock-issues/issues/717
@@ -505,8 +515,11 @@ browser.runtime.onUpdateAvailable.addListener(details => {
     }
 });
 
-µb.supportStats.launchToReadiness = Date.now() - vAPI.T0;
-ubolog(`All ready ${µb.supportStats.launchToReadiness} ms after launch`);
+µb.supportStats.allReadyAfter = `${Date.now() - vAPI.T0} ms`;
+if ( selfieIsValid ) {
+    µb.supportStats.allReadyAfter += ' (selfie)';
+}
+ubolog(`All ready ${µb.supportStats.allReadyAfter} ms after launch`);
 
 // <<<<< end of private scope
 })();

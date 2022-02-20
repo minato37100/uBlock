@@ -32,9 +32,10 @@ const uselessKeys = [
     'modifiedHiddenSettings.consoleLogLevel',
     'modifiedHiddenSettings.uiPopupConfig',
     'modifiedUserSettings.alwaysDetachLogger',
-    'modifiedUserSettings.popupPanelSections',
+    'modifiedUserSettings.firewallPaneMinimized',
     'modifiedUserSettings.externalLists',
     'modifiedUserSettings.importedLists',
+    'modifiedUserSettings.popupPanelSections',
 ];
 
 const sensitiveValues = [
@@ -268,6 +269,13 @@ uBlockDashboard.patchCodeMirrorEditor(cmEditor);
                 details: { url: url.href, select: true, index: -1 },
             });
             ev.preventDefault();
+        });
+
+        uDom('#showSupportInfo').on('click', ev => {
+            const button = ev.target;
+            button.classList.add('hidden');
+            uDom.nodeFromSelector('.a.b.c.d').classList.add('e');
+            cmEditor.refresh();
         });
     }
 

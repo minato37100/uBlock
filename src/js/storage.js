@@ -239,12 +239,6 @@ import {
         if ( typeof hs[key] !== typeof hsDefault[key] ) { continue; }
         this.hiddenSettings[key] = hs[key];
     }
-    if ( typeof this.hiddenSettings.suspendTabsUntilReady === 'boolean' ) {
-        this.hiddenSettings.suspendTabsUntilReady =
-            this.hiddenSettings.suspendTabsUntilReady
-                ? 'yes'
-                : 'unset';
-    }
     this.fireDOMEvent('hiddenSettingsChanged');
 };
 
@@ -629,8 +623,9 @@ self.addEventListener('hiddenSettingsChanged', ( ) => {
 
     // User filter list.
     newAvailableLists[this.userFiltersPath] = {
+        content: 'filters',
         group: 'user',
-        title: vAPI.i18n('1pPageName')
+        title: vAPI.i18n('1pPageName'),
     };
 
     // Custom filter lists.
@@ -810,7 +805,9 @@ self.addEventListener('hiddenSettingsChanged', ( ) => {
     const onFilterListsReady = function(lists) {
         this.availableFilterLists = lists;
 
-        vAPI.net.suspend();
+        if ( vAPI.Net.canSuspend() ) {
+            vAPI.net.suspend();
+        }
         redirectEngine.reset();
         staticExtFilteringEngine.reset();
         staticNetFilteringEngine.reset();
@@ -979,6 +976,8 @@ self.addEventListener('hiddenSettingsChanged', ( ) => {
 
     parser.setMaxTokenLength(staticNetFilteringEngine.MAX_TOKEN_LENGTH);
 
+    compiler.start(writer);
+
     while ( lineIter.eot() === false ) {
         let line = lineIter.next();
 
@@ -1012,6 +1011,8 @@ self.addEventListener('hiddenSettingsChanged', ( ) => {
             });
         }
     }
+
+    compiler.finish(writer);
 
     // https://github.com/uBlockOrigin/uBlock-issues/issues/1365
     //   Embed version into compiled list itself: it is encoded in as the

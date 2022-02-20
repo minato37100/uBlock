@@ -936,7 +936,7 @@ const injectCSP = function(fctxt, pageStore, responseHeaders) {
     if ( staticDirectives !== undefined ) {
         for ( const directive of staticDirectives ) {
             if ( directive.result !== 1 ) { continue; }
-            cspSubsets.push(directive.modifier.value);
+            cspSubsets.push(directive.value);
         }
     }
 
@@ -1136,9 +1136,11 @@ const webRequest = {
 
     start: (( ) => {
         vAPI.net = new vAPI.Net();
-        vAPI.net.suspend();
+        if ( vAPI.Net.canSuspend() ) {
+            vAPI.net.suspend();
+        }
 
-        return ( ) => {
+        return async ( ) => {
             vAPI.net.setSuspendableListener(onBeforeRequest);
             vAPI.net.addListener(
                 'onHeadersReceived',
@@ -1146,7 +1148,7 @@ const webRequest = {
                 { urls: [ 'http://*/*', 'https://*/*' ] },
                 [ 'blocking', 'responseHeaders' ]
             );
-            vAPI.net.unsuspend(true);
+            vAPI.net.unsuspend({ all: true });
         };
     })(),
 

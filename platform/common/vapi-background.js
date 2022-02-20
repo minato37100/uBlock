@@ -45,13 +45,6 @@ if ( vAPI.canWASM === false ) {
 
 vAPI.supportsUserStylesheets = vAPI.webextFlavor.soup.has('user_stylesheet');
 
-// The real actual webextFlavor value may not be set in stone, so listen
-// for possible future changes.
-window.addEventListener('webextFlavor', function() {
-    vAPI.supportsUserStylesheets =
-        vAPI.webextFlavor.soup.has('user_stylesheet');
-}, { once: true });
-
 /******************************************************************************/
 
 vAPI.app = {
@@ -114,7 +107,9 @@ vAPI.browserSettings = (( ) => {
 
     return {
         // https://github.com/uBlockOrigin/uBlock-issues/issues/1723#issuecomment-919913361
-        canLeakLocalIPAddresses: vAPI.webextFlavor.soup.has('mobile'),
+        canLeakLocalIPAddresses:
+            vAPI.webextFlavor.soup.has('firefox') &&
+            vAPI.webextFlavor.soup.has('mobile'),
 
         set: function(details) {
             for ( const setting in details ) {
@@ -150,20 +145,36 @@ vAPI.browserSettings = (( ) => {
                     }
                     break;
 
-                case 'webrtcIPAddress':
-                    if ( this.canLeakLocalIPAddresses === false ) { return; }
-                    if ( !!details[setting] ) {
-                        bp.network.webRTCIPHandlingPolicy.clear({
-                            scope: 'regular',
-                        });
-                    } else {
+                case 'webrtcIPAddress': {
+                    // https://github.com/uBlockOrigin/uBlock-issues/issues/1928
+                    // https://www.reddit.com/r/uBlockOrigin/comments/sl7p74/
+                    //   Hypothetical: some browsers _think_ uBO is still using
+                    //   the setting possibly based on cached state from the
+                    //   past, and making an explicit API call that uBO is not
+                    //   using the setting appears to solve those unexpected
+                    //   reported occurrences of uBO interfering despite never
+                    //   using the API.
+                    const mustEnable = !details[setting];
+                    if ( this.canLeakLocalIPAddresses === false ) {
+                        if ( mustEnable && vAPI.webextFlavor.soup.has('chromium') ) {
+                            bp.network.webRTCIPHandlingPolicy.clear({
+                                scope: 'regular',
+                            });
+                        }
+                        continue;
+                    }
+                    if ( mustEnable ) {
                         bp.network.webRTCIPHandlingPolicy.set({
                             value: 'default_public_interface_only',
                             scope: 'regular'
                         });
+                    } else {
+                        bp.network.webRTCIPHandlingPolicy.clear({
+                            scope: 'regular',
+                        });
                     }
                     break;
-
+                }
                 default:
                     break;
                 }
@@ -813,12 +824,18 @@ browser.browserAction.onClicked.addListener(function(tab) {
 //   content scripts. Whether a message can trigger a privileged operation is
 //   decided based on whether the port from which a message is received is
 //   privileged, which is a status evaluated once, at port connection time.
+//
+// https://github.com/uBlockOrigin/uBlock-issues/issues/1992
+//   If present, use MessageSender.origin to determine whether the port is
+//   from a privileged page, otherwise use MessageSender.url.
+//   MessageSender.origin is more reliable as it is not spoofable by a
+//   compromised renderer.
 
 vAPI.messaging = {
     ports: new Map(),
     listeners: new Map(),
     defaultHandler: null,
-    PRIVILEGED_URL: vAPI.getURL(''),
+    PRIVILEGED_ORIGIN: vAPI.getURL('').slice(0, -1),
     NOOPFUNC: function(){},
     UNHANDLED: 'vAPI.messaging.notHandled',
 
@@ -844,10 +861,12 @@ vAPI.messaging = {
         );
         const portDetails = { port };
         const sender = port.sender;
-        const { tab, url } = sender;
+        const { origin, tab, url } = sender;
         portDetails.frameId = sender.frameId;
         portDetails.frameURL = url;
-        portDetails.privileged = url.startsWith(this.PRIVILEGED_URL);
+        portDetails.privileged = origin !== undefined
+            ? origin === this.PRIVILEGED_ORIGIN
+            : url.startsWith(this.PRIVILEGED_ORIGIN);
         if ( tab ) {
             portDetails.tabId = tab.id;
             portDetails.tabURL = tab.url;
@@ -1218,12 +1237,10 @@ vAPI.Net = class {
     }
     unsuspendAllRequests() {
     }
-    suspend(force = false) {
-        if ( this.canSuspend() || force ) {
-            this.suspendDepth += 1;
-        }
+    suspend() {
+        this.suspendDepth += 1;
     }
-    unsuspend(all = false) {
+    unsuspend({ all = false, discard = false } = {}) {
         if ( this.suspendDepth === 0 ) { return; }
         if ( all ) {
             this.suspendDepth = 0;
@@ -1231,9 +1248,9 @@ vAPI.Net = class {
             this.suspendDepth -= 1;
         }
         if ( this.suspendDepth !== 0 ) { return; }
-        this.unsuspendAllRequests();
+        this.unsuspendAllRequests(discard);
     }
-    canSuspend() {
+    static canSuspend() {
         return false;
     }
 };

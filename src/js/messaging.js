@@ -137,7 +137,7 @@ const onMessage = function(request, sender, callback) {
         });
         return;
 
-    case 'sfneBenchmark':
+    case 'snfeBenchmark':
         µb.benchmarkStaticNetFiltering({ redirectEngine }).then(result => {
             callback(result);
         });
@@ -219,12 +219,17 @@ const onMessage = function(request, sender, callback) {
         µb.toggleHostnameSwitch(request);
         break;
 
+    case 'uiAccentStylesheet':
+        µb.uiAccentStylesheet = request.stylesheet;
+        break;
+
     case 'uiStyles':
         response = {
+            uiAccentCustom: µb.userSettings.uiAccentCustom,
+            uiAccentCustom0: µb.userSettings.uiAccentCustom0,
+            uiAccentStylesheet: µb.uiAccentStylesheet,
             uiStyles: µb.hiddenSettings.uiStyles,
-            uiTheme: vAPI.webextFlavor.soup.has('devbuild')
-                ? µb.hiddenSettings.uiTheme
-                : 'unset',
+            uiTheme: µb.userSettings.uiTheme,
         };
         break;
 
@@ -237,6 +242,14 @@ const onMessage = function(request, sender, callback) {
             response.canLeakLocalIPAddresses =
                 vAPI.browserSettings.canLeakLocalIPAddresses === true;
         }
+        break;
+
+    case 'snfeDump':
+        response = staticNetFilteringEngine.dump();
+        break;
+
+    case 'cfeDump':
+        response = cosmeticFilteringEngine.dump();
         break;
 
     default:
@@ -1083,6 +1096,7 @@ const getLists = async function(callback) {
         isUpdating: io.isUpdating(),
         netFilterCount: staticNetFilteringEngine.getFilterCount(),
         parseCosmeticFilters: µb.userSettings.parseAllABPHideFilters,
+        suspendUntilListsAreLoaded: µb.userSettings.suspendUntilListsAreLoaded,
         userFiltersPath: µb.userFiltersPath
     };
     const [ lists, metadata ] = await Promise.all([
@@ -1285,7 +1299,7 @@ const getSupportData = async function() {
                 listDetails.push(parts.join('.'));
             }
         }
-        if ( list.isDefault ) {
+        if ( list.isDefault || listKey === µb.userFiltersPath ) {
             if ( used ) {
                 defaultListset[listKey] = listDetails.join(', ');
             } else {
@@ -1300,6 +1314,13 @@ const getSupportData = async function() {
     }
     if ( Object.keys(addedListset).length === 0 ) {
         addedListset = undefined;
+    } else if ( Object.keys(addedListset).length > 20 ) {
+        const added = Object.keys(addedListset);
+        const truncated = added.slice(20);
+        for ( const key of truncated ) {
+            delete addedListset[key];
+        }
+        addedListset[`[${truncated.length} lists not shown]`] = '[too many]';
     }
     if ( Object.keys(removedListset).length === 0 ) {
         removedListset = undefined;

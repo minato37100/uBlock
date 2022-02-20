@@ -46,8 +46,8 @@ const hiddenSettingsDefault = {
     allowGenericProceduralFilters: false,
     assetFetchTimeout: 30,
     autoCommentFilterTemplate: '{{date}} {{origin}}',
-    autoUpdateAssetFetchPeriod: 120,
-    autoUpdateDelayAfterLaunch: 180,
+    autoUpdateAssetFetchPeriod: 60,
+    autoUpdateDelayAfterLaunch: 105,
     autoUpdatePeriod: 4,
     benchmarkDatasetURL: 'unset',
     blockingProfiles: '11111/#F00 11010/#C0F 11001/#00F 00001',
@@ -78,13 +78,11 @@ const hiddenSettingsDefault = {
     popupPanelLockedSections: 0,
     popupPanelHeightMode: 0,
     requestJournalProcessPeriod: 1000,
-    selfieAfter: 3,
+    selfieAfter: 2,
     strictBlockingBypassDuration: 120,
-    suspendTabsUntilReady: 'unset',
     uiPopupConfig: 'unset',
     uiFlavor: 'unset',
     uiStyles: 'unset',
-    uiTheme: 'unset',
     updateAssetBypassBrowserCache: false,
     userResourcesLocation: 'unset',
 };
@@ -98,7 +96,9 @@ const userSettingsDefault = {
     collapseBlocked: true,
     colorBlindFriendly: false,
     contextMenuEnabled: true,
-    dynamicFilteringEnabled: false,
+    uiAccentCustom: false,
+    uiAccentCustom0: '#aca0f7',
+    uiTheme: 'auto',
     externalLists: '',
     firewallPaneMinimized: true,
     hyperlinkAuditingDisabled: true,
@@ -110,6 +110,7 @@ const userSettingsDefault = {
     prefetchingDisabled: true,
     requestLogMaxEntries: 1000,
     showIconBadge: true,
+    suspendUntilListsAreLoaded: vAPI.Net.canSuspend(),
     tooltipsDisabled: false,
     webrtcIPAddressHidden: false,
 };
@@ -175,8 +176,8 @@ const µBlock = {  // jshint ignore:line
 
     // Read-only
     systemSettings: {
-        compiledMagic: 39,  // Increase when compiled format changes
-        selfieMagic: 39,    // Increase when selfie format changes
+        compiledMagic: 46,  // Increase when compiled format changes
+        selfieMagic: 46,    // Increase when selfie format changes
     },
 
     // https://github.com/uBlockOrigin/uBlock-issues/issues/759#issuecomment-546654501
@@ -188,13 +189,6 @@ const µBlock = {  // jshint ignore:line
     //   issue. It's just an attempt at hardening.
     compiledFormatChanged: false,
     selfieIsInvalid: false,
-
-    compiledCosmeticSection: 200,
-    compiledScriptletSection: 300,
-    compiledHTMLSection: 400,
-    compiledHTTPHeaderSection: 500,
-    compiledSentinelSection: 1000,
-    compiledBadSubsection: 1,
 
     restoreBackupSettings: {
         lastRestoreFile: '',
@@ -222,8 +216,8 @@ const µBlock = {  // jshint ignore:line
     readyToFilter: false,
 
     supportStats: {
-        launchToReadiness: 0,
-        launchFromSelfie: false,
+        allReadyAfter: '',
+        maxAssetCacheWait: '0 ms',
     },
 
     pageStores: new Map(),
@@ -256,6 +250,7 @@ const µBlock = {  // jshint ignore:line
 
     liveBlockingProfiles: [],
     blockingProfileColorCache: new Map(),
+    uiAccentStylesheet: '',
 };
 
 µBlock.domainFromHostname = domainFromHostname;

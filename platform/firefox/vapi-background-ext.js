@@ -292,14 +292,18 @@ import {
             this.pendingRequests.push(pending);
             return pending.promise;
         }
-        unsuspendAllRequests() {
+        unsuspendAllRequests(discard = false) {
             const pendingRequests = this.pendingRequests;
             this.pendingRequests = [];
             for ( const entry of pendingRequests ) {
-                entry.resolve(this.onBeforeSuspendableRequest(entry.details));
+                entry.resolve(
+                    discard !== true
+                        ? this.onBeforeSuspendableRequest(entry.details)
+                        : undefined
+                );
             }
         }
-        canSuspend() {
+        static canSuspend() {
             return true;
         }
     };

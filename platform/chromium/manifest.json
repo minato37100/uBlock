@@ -50,7 +50,8 @@
         "https://filterlists.com/*",
         "https://forums.lanik.us/*",
         "https://github.com/*",
-        "https://*.github.io/*"
+        "https://*.github.io/*",
+        "https://*.letsblock.it/*"
       ],
       "js": [
         "/js/scriptlets/subscriber.js"
@@ -70,7 +71,7 @@
   },
   "incognito": "split",
   "manifest_version": 2,
-  "minimum_chrome_version": "61.0",
+  "minimum_chrome_version": "66.0",
   "name": "uBlock Origin",
   "options_ui": {
     "page": "dashboard.html",

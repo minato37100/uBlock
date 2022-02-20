@@ -128,7 +128,7 @@
     "description": "Tooltip used for the logger icon in the panel"
   },
   "popupTipReport": {
-    "message": "Report an issue on this website",
+    "message": "Bu veb-saytdakı problemi bildir",
     "description": "Tooltip used for the 'chat' icon in the panel"
   },
   "popupTipNoPopups": {
@@ -276,11 +276,11 @@
     "description": "Example of use: Version 1.26.4"
   },
   "popup3pScriptFilterTip": {
-    "message": "↑: Emphasize rows which have 3rd-party scripts",
+    "message": "↑: Qeyd edək simli olan var, üçüncü scripts",
     "description": "Tooltip shown when hovering small filtering widget in '3rd-party scripts' cell"
   },
   "popup3pFrameFilterTip": {
-    "message": "↑: Emphasize rows which have 3rd-party frames",
+    "message": "↑: 3-cü tərəf çərçivələri olan sətirləri vurğula",
     "description": "Tooltip shown when hovering small filtering widget in '3rd-party frames' cell"
   },
   "pickerCreate": {
@@ -335,17 +335,25 @@
     "message": "Rəng seçmə qabiliyyəti olmayanlar üçün rəngləmə rejimi",
     "description": "English: Color-blind friendly"
   },
+  "settingsAppearance": {
+    "message": "Appearance",
+    "description": "Section for controlling user interface appearance"
+  },
+  "settingsThemeLabel": {
+    "message": "Theme",
+    "description": "Label for checkbox to enable a custom dark theme"
+  },
+  "settingsThemeAccent0Label": {
+    "message": "Custom accent color",
+    "description": "Label for checkbox to pick an accent color"
+  },
   "settingsCloudStorageEnabledPrompt": {
     "message": "Bulud yaddaşı dəstəyini işə sal",
     "description": ""
   },
   "settingsAdvancedUserPrompt": {
     "message": "Mən təcrübəli istifadəçiyəm (<a href='https://github.com/gorhill/uBlock/wiki/Advanced-user-features'>mütləq oxuyun</a>)",
-    "description": ""
-  },
-  "settingsAdvancedUserSettings": {
-    "message": "əlavə parametrlər",
-    "description": "For the tooltip of a link which gives access to advanced settings"
+    "description": "Checkbox to let user access advanced, technical features"
   },
   "settingsPrefetchingDisabledPrompt": {
     "message": "Erkən yükləməni dayandır (əngəllənmiş şəbəkə sorğuları üzrə qoşulmalara yol verməmək üçün)",
@@ -388,8 +396,20 @@
     "description": "background information: https://github.com/gorhill/uBlock/issues/3150"
   },
   "settingsUncloakCnamePrompt": {
-    "message": "Uncloak canonical names",
+    "message": "Canonical adları ortaya çıxarın",
     "description": "background information: https://github.com/uBlockOrigin/uBlock-issues/issues/1513"
+  },
+  "settingsAdvanced": {
+    "message": "Advanced",
+    "description": "Section for controlling advanced-user settings"
+  },
+  "settingsAdvancedSynopsis": {
+    "message": "Features suitable only for technical users",
+    "description": "Description of section controlling advanced-user settings"
+  },
+  "settingsAdvancedUserSettings": {
+    "message": "əlavə parametrlər",
+    "description": "For the tooltip of a link which gives access to advanced settings"
   },
   "settingsLastRestorePrompt": {
     "message": "Son bərpa əməliyyatının tarixi:",
@@ -434,6 +454,10 @@
   "3pIgnoreGenericCosmeticFiltersInfo": {
     "message": "Ümumi kosmetik filtrlərin bütün veb-saytlarda istifadəsi nəzərdə tutulur. Bu seçimi etdiyiniz təqdirdə veb-səhifələrdə ümumi kosmetik filtrlərin işlənməsi ilə əlaqədar yaddaşdan istifadə və prosessor yükü azalacaq.\n\nAz güclü cihazlarda bu seçimin aktivləşdirilməsi tövsiyə olunur.",
     "description": "Describes the purpose of the 'Ignore generic cosmetic filters' feature."
+  },
+  "3pSuspendUntilListsAreLoaded": {
+    "message": "Filter siyahıları yüklənənə kimi şəbəkə fəaliyyətini dayandır",
+    "description": "A checkbox in the 'Filter lists' pane"
   },
   "3pListsOfBlockedHostsHeader": {
     "message": "Lists of blocked hosts",
@@ -589,7 +613,7 @@
   },
   "whitelistPrompt": {
     "message": "İstisnalar siyahısındakı təlimatlar uBlock Origin-in hansı veb-səhifələrdə işləyişinin dayandırılmasını təmin edir. Hər sətirdə yalnız bir təlimat ola bilər. Yanlış təlimatlar xəbərdarlıq edilmədən nəzərə alınmayacaq və şərhə çeviriləcəkdir.",
-    "description": "The name of the trusted sites pane."
+    "description": "A concise description of the 'Trusted sites' pane."
   },
   "whitelistImport": {
     "message": "İdxal və əlavə et",
@@ -860,11 +884,11 @@
     "description": "Text for button which open an external webpage in Support pane"
   },
   "supportReportSpecificButton": {
-    "message": "Create new report",
+    "message": "Yeni hesabat yaradın",
     "description": "Text for button which open an external webpage in Support pane"
   },
   "supportFindSpecificButton": {
-    "message": "Find similar reports",
+    "message": "Oxşar hesabat tap",
     "description": "A clickable link in the filter issue reporter section"
   },
   "supportS1H": {
@@ -872,7 +896,7 @@
     "description": "Header of 'Documentation' section in Support pane"
   },
   "supportS1P1": {
-    "message": "Read the documentation at <code>uBlock/wiki</code> to learn about all of uBlock Origin's features.",
+    "message": "UBlock Origin-in bütün xüsusiyyətlərini öyrənmək üçün <code>uBlock/wiki</code> ünvanında sənədləri oxuyun.",
     "description": "First paragraph of 'Documentation' section in Support pane"
   },
   "supportS2H": {
@@ -880,15 +904,15 @@
     "description": "Header of 'Questions and support' section in Support pane"
   },
   "supportS2P1": {
-    "message": "Answers to questions and other kinds of help support is provided on the subreddit <code>/r/uBlockOrigin</code>.",
+    "message": "Suallara və yardım dəstəyinin digər növlərinə cavablar <code>/r/uBlock Origin</Code > - də təqdim olunur.",
     "description": "First paragraph of 'Questions and support' section in Support pane"
   },
   "supportS3H": {
-    "message": "Filter issues/website is broken",
+    "message": "Filter problemləri / vebsəhifə işləmir",
     "description": "Header of 'Filter issues' section in Support pane"
   },
   "supportS3P1": {
-    "message": "Report filter issues with specific websites to <span data-url=\"https://github.com/uBlockOrigin/uAssets/issues?q=is%3Aissue\"><code>uBlockOrigin/uAssets</code> issue tracker</span>. <u>Requires a GitHub account.</u>",
+    "message": "Report filter issues with specific websites to the <span data-url=\"https://github.com/uBlockOrigin/uAssets/issues?q=is%3Aissue\"><code>uBlockOrigin/uAssets</code> issue tracker</span>. <u>Requires a GitHub account.</u>",
     "description": "First paragraph of 'Filter issues' section in Support pane"
   },
   "supportS3P2": {
@@ -904,7 +928,7 @@
     "description": "Header of 'Bug report' section in Support pane"
   },
   "supportS4P1": {
-    "message": "Report issues with uBlock Origin itself to <span data-url=\"https://github.com/uBlockOrigin/uBlock-issues/issues?q=is%3Aissue\"><code>uBlockOrigin/uBlock-issue</code> issue tracker</span>. <u>Requires a GitHub account.</u>",
+    "message": "Report issues with uBlock Origin itself to the <span data-url=\"https://github.com/uBlockOrigin/uBlock-issues/issues?q=is%3Aissue\"><code>uBlockOrigin/uBlock-issue</code> issue tracker</span>. <u>Requires a GitHub account.</u>",
     "description": "First paragraph of 'Bug report' section in Support pane"
   },
   "supportS5H": {
@@ -920,7 +944,7 @@
     "description": "Second paragraph of 'Troubleshooting Information' section in Support pane"
   },
   "supportS6H": {
-    "message": "Report a filter issue",
+    "message": "Filter problemini bildir",
     "description": "Header of 'Report a filter issue' section in Support pane"
   },
   "supportS6P1S1": {
@@ -932,7 +956,7 @@
     "description": "Label for the URL of the page"
   },
   "supportS6Select1": {
-    "message": "The web page...",
+    "message": "Səhifə...",
     "description": "Label for widget to select type of issue"
   },
   "supportS6Select1Option0": {
@@ -1140,7 +1164,7 @@
     "description": "tooltip"
   },
   "cloudNoData": {
-    "message": "...\n...",
+    "message": "…\n…",
     "description": ""
   },
   "cloudDeviceNamePrompt": {
@@ -1168,11 +1192,11 @@
     "description": ""
   },
   "contextMenuBlockElementInFrame": {
-    "message": "Block element in frame...",
+    "message": "Çərçivədəki elementi əngəllə",
     "description": "An entry in the browser's contextual menu"
   },
   "contextMenuSubscribeToList": {
-    "message": "Subscribe to filter list...",
+    "message": "Filter siyahısına abunə ol",
     "description": "An entry in the browser's contextual menu"
   },
   "contextMenuTemporarilyAllowLargeMediaElements": {
